@@ -1,12 +1,8 @@
 <?php
-require '../includes/auth.php';
-require '../config.php';
-requireRole(['admin']);
 
 $title = 'Kelola Kelas';
 $section = 'admin';
 
-include '../includes/header.php';
 ?>
 
 <h1><?= htmlspecialchars($title) ?></h1>
