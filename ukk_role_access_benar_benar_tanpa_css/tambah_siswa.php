@@ -12,12 +12,12 @@ $section = 'admin';
 $db_connection = $conn ?? $koneksi ?? mysqli_connect("localhost", "root", "", "db_ukk_2026");
 
 if (isset($_POST['submit'])) {
-    $nip           = mysqli_real_escape_string($db_connection, $_POST['nip']);
-    $nisn          = mysqli_real_escape_string($db_connection, $_POST['nisn']);
-    $nama          = mysqli_real_escape_string($db_connection, $_POST['nama']);
-    $jenis_kelamin = mysqli_real_escape_string($db_connection, $_POST['jenis_kelamin']);
-    $tanggal_lahir = mysqli_real_escape_string($db_connection, $_POST['tanggal_lahir']);
-    $alamat        = mysqli_real_escape_string($db_connection, $_POST['alamat']);
+    $nip            = mysqli_real_escape_string($db_connection, $_POST['nip']);
+    $nisn           = mysqli_real_escape_string($db_connection, $_POST['nisn']);
+    $nama           = mysqli_real_escape_string($db_connection, $_POST['nama']);
+    $jenis_kelamin  = mysqli_real_escape_string($db_connection, $_POST['jenis_kelamin']);
+    $tanggal_lahir  = mysqli_real_escape_string($db_connection, $_POST['tanggal_lahir']);
+    $alamat         = mysqli_real_escape_string($db_connection, $_POST['alamat']);
 
     $query_insert = "INSERT INTO t_siswa (nip, nisn, nama, jenis_kelamin, tanggal_lahir, alamat, status_aktif, created_at, updated_at) 
                      VALUES ('$nip', '$nisn', '$nama', '$jenis_kelamin', '$tanggal_lahir', '$alamat', 1, NOW(), NOW())";
@@ -37,18 +37,26 @@ if (isset($_POST['submit'])) {
     <title><?= $title ?></title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
-        body { display: flex; height: 100vh; background-color: #f8f9fa; }
         
-        /* Sidebar Kiri */
-        .sidebar { width: 250px; background-color: #1a1d20; color: #fff; display: flex; flex-direction: column; padding: 20px 0; }
-        .sidebar h2 { font-size: 18px; padding: 0 20px 15px 20px; border-bottom: 1px solid #2d3238; margin-bottom: 15px; }
+        /* Latar belakang utama halaman abu-abu terang */
+        body { display: flex; height: 100vh; background-color: #f4f4f4; overflow: hidden; }
+        
+        /* Sidebar Kiri Hitam Sesuai Gambar */
+        .sidebar { width: 250px; background-color: #000000; color: #fff; display: flex; flex-direction: column; padding: 20px 0; justify-content: space-between; }
+        .sidebar-top h2 { font-size: 18px; padding: 0 20px 15px 20px; border-bottom: 1px solid #333; margin-bottom: 15px; color: #fff; }
         .sidebar a { color: #cfd3d6; text-decoration: none; padding: 10px 20px; display: block; font-size: 14px; transition: 0.2s; }
-        .sidebar a:hover, .sidebar a.active { background-color: #0d6efd; color: #fff; }
-        .sidebar .logout { color: #ff6b6b; margin-top: auto; }
+        .sidebar a:hover { background-color: #333; color: #fff; }
         
-        /* Konten Utama Kanan */
-        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; background-color: #ffffff; }
-        .header-top { padding: 20px; border-bottom: 1px solid #dee2e6; background-color: #ffffff; }
+        /* Menu aktif warna cyan */
+        .sidebar a.active { background-color: #00bcd4; color: #fff; font-weight: bold; }
+        
+        /* Tombol Logout Merah di Bawah Sidebar */
+        .sidebar .logout { color: #ffffff; background-color: #a91d3a; margin: 0 20px; text-align: left; border-radius: 4px; font-weight: bold; }
+        .sidebar .logout:hover { background-color: #88152c; }
+        
+        /* Konten Utama Kanan (Kotak Putih) */
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; background-color: #ffffff; margin: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .header-top { padding: 20px; border-bottom: 1px solid #dee2e6; background-color: #ffffff; border-top-left-radius: 8px; border-top-right-radius: 8px; }
         .header-top h1 { font-size: 24px; color: #333; margin-bottom: 5px; }
         .content-body { padding: 20px; }
         
@@ -56,8 +64,10 @@ if (isset($_POST['submit'])) {
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; color: #333; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; max-width: 500px; padding: 8px 12px; border: 1px solid #ced4da; border-radius: 4px; font-size: 14px; }
-        .btn-submit { background-color: #0d6efd; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; }
-        .btn-submit:hover { background-color: #0b5ed7; }
+        
+        .btn-submit { background-color: #ffc107; color: #000; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: bold; }
+        .btn-submit:hover { background-color: #e0a800; }
+        
         .btn-back { background-color: #6c757d; color: white; text-decoration: none; padding: 8px 16px; border-radius: 4px; font-size: 14px; display: inline-block; margin-left: 5px; }
         .btn-back:hover { background-color: #5c636a; }
     </style>
@@ -66,13 +76,18 @@ if (isset($_POST['submit'])) {
 
     <!-- Sidebar Kiri -->
     <div class="sidebar">
-        <h2>My Website</h2>
-        <a href="dashboard.php">Dashboard</a>
-        <a href="kelola_siswa.php" class="active">Data Siswa</a>
-        <a href="kelola_guru.php">Data Guru</a>
-        <a href="kelola_kelas.php">Kelas</a>
-        <a href="laporan.php">Laporan</a>
-        <a href="logout.php" class="logout">Logout</a>
+        <div class="sidebar-top">
+            <h2>My Website</h2>
+            <a href="dashboard.php">Dashboard</a>
+            <a href="kelola_siswa.php" class="active">Data Siswa</a>
+            <a href="kelola_guru.php">Data Guru</a>
+            <a href="kelola_kelas.php">Kelas</a>
+            <a href="laporan.php">Laporan</a>
+            <a href="about.php">About Me</a>
+        </div>
+        <div>
+            <a href="logout.php" class="logout">Logout</a>
+        </div>
     </div>
 
     <!-- Area Kanan -->
