@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once 'auth.php'; 
 require_once 'config.php'; 
 
@@ -34,105 +35,158 @@ if (isset($_POST['submit'])) {
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <title><?= $title ?></title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
-        
-        /* Latar belakang utama halaman abu-abu terang */
-        body { display: flex; height: 100vh; background-color: #f4f4f4; overflow: hidden; }
-        
-        /* Sidebar Kiri Hitam Sesuai Gambar */
-        .sidebar { width: 250px; background-color: #000000; color: #fff; display: flex; flex-direction: column; padding: 20px 0; justify-content: space-between; }
-        .sidebar-top h2 { font-size: 18px; padding: 0 20px 15px 20px; border-bottom: 1px solid #333; margin-bottom: 15px; color: #fff; }
-        .sidebar a { color: #cfd3d6; text-decoration: none; padding: 10px 20px; display: block; font-size: 14px; transition: 0.2s; }
-        .sidebar a:hover { background-color: #333; color: #fff; }
-        
-        /* Menu aktif warna cyan */
-        .sidebar a.active { background-color: #00bcd4; color: #fff; font-weight: bold; }
-        
-        /* Tombol Logout Merah di Bawah Sidebar */
-        .sidebar .logout { color: #ffffff; background-color: #a91d3a; margin: 0 20px; text-align: left; border-radius: 4px; font-weight: bold; }
-        .sidebar .logout:hover { background-color: #88152c; }
-        
-        /* Konten Utama Kanan (Kotak Putih) */
-        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; background-color: #ffffff; margin: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .header-top { padding: 20px; border-bottom: 1px solid #dee2e6; background-color: #ffffff; border-top-left-radius: 8px; border-top-right-radius: 8px; }
-        .header-top h1 { font-size: 24px; color: #333; margin-bottom: 5px; }
-        .content-body { padding: 20px; }
-        
-        /* Form Styling */
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; color: #333; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; max-width: 500px; padding: 8px 12px; border: 1px solid #ced4da; border-radius: 4px; font-size: 14px; }
-        
-        .btn-submit { background-color: #ffc107; color: #000; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: bold; }
-        .btn-submit:hover { background-color: #e0a800; }
-        
-        .btn-back { background-color: #6c757d; color: white; text-decoration: none; padding: 8px 16px; border-radius: 4px; font-size: 14px; display: inline-block; margin-left: 5px; }
-        .btn-back:hover { background-color: #5c636a; }
+        .bg-custom-sidebar {
+            background-color: #000000;
+            min-height: 100vh;
+        }
+        body {
+            background-color: #f2f2f2;
+            overflow-x: hidden;
+        }
+        .nav-pills .nav-link {
+            color: #cfd3d6;
+            border-radius: 6px;
+            transition: all 0.2s ease-in-out;
+            margin-bottom: 4px;
+        }
+        .nav-pills .nav-link:hover {
+            background-color: #333333;
+            color: #ffffff;
+            transform: translateX(5px);
+        }
+        .nav-pills .nav-link.active {
+            background-color: #00bcd4 !important;
+            color: #ffffff !important;
+            font-weight: bold;
+            transform: translateX(5px);
+        }
+        .content-card {
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 25px;
+        }
     </style>
 </head>
 <body>
 
-    <!-- Sidebar Kiri -->
-    <div class="sidebar">
-        <div class="sidebar-top">
-            <h2>My Website</h2>
-            <a href="dashboard.php">Dashboard</a>
-            <a href="kelola_siswa.php" class="active">Data Siswa</a>
-            <a href="kelola_guru.php">Data Guru</a>
-            <a href="kelola_kelas.php">Kelas</a>
-            <a href="laporan.php">Laporan</a>
-            <a href="about.php">About Me</a>
+<div class="container-fluid d-flex p-0" style="min-height: 100vh;">
+    <!-- SIDEBAR LENGKAP -->
+    <div class="col-md-3 col-lg-2 bg-custom-sidebar p-3 d-flex flex-column justify-content-between">
+        <div>
+            <h4 class="text-white mb-4 fw-bold pb-2 border-bottom border-secondary">
+                My Website
+            </h4>
+            <ul class="nav nav-pills flex-column">
+                <li class="nav-item">
+                    <a href="dashboard.php" class="nav-link">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a href="kelola_siswa.php" class="nav-link active">Kelola Siswa</a>
+                </li>
+                <li class="nav-item">
+                    <a href="kelola_guru.php" class="nav-link">Kelola Guru</a>
+                </li>
+                <li class="nav-item">
+                    <a href="kelola_kelas.php" class="nav-link">Kelola Kelas</a>
+                </li>
+                <li class="nav-item">
+                    <a href="kelola_tahun_ajaran.php" class="nav-link">Kelola Tahun Ajaran</a>
+                </li>
+                <li class="nav-item">
+                    <a href="penempatan_siswa.php" class="nav-link">Penempatan Siswa</a>
+                </li>
+                <li class="nav-item">
+                    <a href="kelola_wali_kelas.php" class="nav-link">Kelola Wali Kelas</a>
+                </li>
+                <li class="nav-item">
+                    <a href="kategori_pelanggaran.php" class="nav-link">Kategori Pelanggaran</a>
+                </li>
+                <li class="nav-item">
+                    <a href="jenis_pelanggaran.php" class="nav-link">Jenis Pelanggaran</a>
+                </li>
+                <li class="nav-item">
+                    <a href="laporan.php" class="nav-link">Cetak / Laporan</a>
+                </li>
+                
+                <!-- PELANGGARAN -->
+                <li class="text-muted small mt-3 mb-1 px-2 fw-bold text-uppercase">PELANGGARAN</li>
+                <li class="nav-item">
+                    <a href="catat_pelanggaran.php" class="nav-link">Catat Pelanggaran</a>
+                </li>
+                <li class="nav-item">
+                    <a href="tindakan.php" class="nav-link">Tindakan</a>
+                </li>
+                <li class="nav-item">
+                    <a href="laporan.php" class="nav-link">Laporan</a>
+                </li>
+                <li class="nav-item">
+                    <a href="riwayat.php" class="nav-link">Riwayat</a>
+                </li>
+                <li class="nav-item">
+                    <a href="rekap_poin.php" class="nav-link">Rekap Poin</a>
+                </li>
+            </ul>
         </div>
         <div>
-            <a href="logout.php" class="logout">Logout</a>
+            <hr class="text-secondary">
+            <a href="logout.php" class="btn text-white w-100 text-start fw-bold" style="background-color: #a91d3a;">
+                Logout
+            </a>
         </div>
     </div>
 
-    <!-- Area Kanan -->
-    <div class="main-content">
-        <div class="header-top">
-            <h1>Tambah Siswa</h1>
-            <p style="color: #666; font-size: 13px;">Formulir penambahan data siswa baru.</p>
-        </div>
-        <div class="content-body">
+    <!-- KONTEN UTAMA FORM TAMBAH SISWA -->
+    <main class="flex-grow-1 p-4">
+        <div class="content-card shadow-sm">
+            <div class="mb-3">
+                <h2>Tambah Siswa</h2>
+                <p class="text-muted mb-0">Formulir penambahan data siswa baru.</p>
+            </div>
+            <hr>
+
             <form action="" method="POST">
-                <div class="form-group">
-                    <label for="nip">NIP</label>
-                    <input type="text" id="nip" name="nip" required>
+                <div class="mb-3">
+                    <label for="nip" class="form-label fw-bold">NIP</label>
+                    <input type="text" class="form-control" id="nip" name="nip" required>
                 </div>
-                <div class="form-group">
-                    <label for="nisn">NISN</label>
-                    <input type="text" id="nisn" name="nisn" required>
+                <div class="mb-3">
+                    <label for="nisn" class="form-label fw-bold">NISN</label>
+                    <input type="text" class="form-control" id="nisn" name="nisn" required>
                 </div>
-                <div class="form-group">
-                    <label for="nama">Nama Siswa</label>
-                    <input type="text" id="nama" name="nama" required>
+                <div class="mb-3">
+                    <label for="nama" class="form-label fw-bold">Nama Siswa</label>
+                    <input type="text" class="form-control" id="nama" name="nama" required>
                 </div>
-                <div class="form-group">
-                    <label for="jenis_kelamin">Jenis Kelamin</label>
-                    <select id="jenis_kelamin" name="jenis_kelamin" required>
+                <div class="mb-3">
+                    <label for="jenis_kelamin" class="form-label fw-bold">Jenis Kelamin</label>
+                    <select class="form-select" id="jenis_kelamin" name="jenis_kelamin" required>
                         <option value="">-- Pilih Jenis Kelamin --</option>
                         <option value="L">Laki-laki (L)</option>
                         <option value="P">Perempuan (P)</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label for="tanggal_lahir">Tanggal Lahir</label>
-                    <input type="date" id="tanggal_lahir" name="tanggal_lahir" required>
+                <div class="mb-3">
+                    <label for="tanggal_lahir" class="form-label fw-bold">Tanggal Lahir</label>
+                    <input type="date" class="form-control" id="tanggal_lahir" name="tanggal_lahir" required>
                 </div>
-                <div class="form-group">
-                    <label for="alamat">Alamat</label>
-                    <textarea id="alamat" name="alamat" rows="3" required></textarea>
+                <div class="mb-3">
+                    <label for="alamat" class="form-label fw-bold">Alamat</label>
+                    <textarea class="form-control" id="alamat" name="alamat" rows="3" required></textarea>
                 </div>
-                <div style="margin-top: 20px;">
-                    <button type="submit" name="submit" class="btn-submit">Simpan</button>
-                    <a href="kelola_siswa.php" class="btn-back">Kembali</a>
+                <div class="mt-4">
+                    <button type="submit" name="submit" class="btn btn-warning fw-semibold px-4 text-dark">Simpan</button>
+                    <a href="kelola_siswa.php" class="btn btn-secondary fw-semibold px-4 ms-2">Kembali</a>
                 </div>
             </form>
         </div>
-    </div>
+    </main>
+</div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

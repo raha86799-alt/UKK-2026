@@ -1,4 +1,5 @@
 <?php
+session_start();
 require_once 'auth.php'; 
 require_once 'config.php'; 
 
@@ -9,140 +10,188 @@ if (function_exists('requireRole')) {
 $title = 'Kelola Kelas';
 $section = 'admin';
 
-// Memastikan variabel koneksi PDO tersedia (pastikan config.php mendefinisikan $pdo)
-// Jika di config.php menggunakan $conn/$koneksi, sesuaikan di bawah ini
+// Memastikan variabel koneksi PDO tersedia
 $db_pdo = $pdo ?? null;
-if (!$db_pdo && isset($conn)) {
-    // Fallback jika menggunakan koneksi lain, atau pastikan $pdo terhubung
+if (!$db_pdo && isset($conn) && $conn instanceof PDO) {
+    $db_pdo = $conn;
 }
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <title><?= $title ?></title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
-        
-        /* Latar belakang utama halaman abu-abu terang */
-        body { display: flex; height: 100vh; background-color: #f4f4f4; overflow: hidden; }
-        
-        /* Sidebar Kiri Hitam Sesuai Gambar */
-        .sidebar { width: 250px; background-color: #000000; color: #fff; display: flex; flex-direction: column; padding: 20px 0; justify-content: space-between; }
-        .sidebar-top h2 { font-size: 18px; padding: 0 20px 15px 20px; border-bottom: 1px solid #333; margin-bottom: 15px; color: #fff; }
-        .sidebar a { color: #cfd3d6; text-decoration: none; padding: 10px 20px; display: block; font-size: 14px; transition: 0.2s; }
-        .sidebar a:hover { background-color: #333; color: #fff; }
-        
-        /* Menu aktif warna cyan */
-        .sidebar a.active { background-color: #00bcd4; color: #fff; font-weight: bold; }
-        
-        /* Tombol Logout Merah di Bawah Sidebar */
-        .sidebar .logout { color: #ffffff; background-color: #a91d3a; margin: 0 20px; text-align: left; border-radius: 4px; font-weight: bold; }
-        .sidebar .logout:hover { background-color: #88152c; }
-        
-        /* Konten Utama Kanan */
-        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; background-color: #ffffff; margin: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 20px; }
-        
-        .header-top { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #dee2e6; padding-bottom: 15px; margin-bottom: 20px; }
-        .header-top h1 { font-size: 24px; color: #333; }
-        
-        /* Tombol Tambah Kelas */
-        .btn-tambah { background-color: #0d6efd; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; font-size: 14px; font-weight: bold; }
-        .btn-tambah:hover { background-color: #0b5ed7; }
-
-        /* Tabel Data */
-        .data-table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        .data-table th, .data-table td { text-align: left; padding: 12px; border-bottom: 1px solid #ddd; }
-        .data-table th { background-color: #f8f9fa; font-weight: bold; color: #333; }
-        .data-table tbody tr:nth-child(even) { background-color: #fafafa; }
-
-        /* Tombol Aksi */
-        .btn-action { padding: 5px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; text-decoration: none; color: white; margin-right: 3px; display: inline-block; }
-        .btn-edit { background-color: #ffc107; color: #000; }
-        .btn-edit:hover { background-color: #e0a800; }
-        .btn-delete { background-color: #dc3545; }
-        .btn-delete:hover { background-color: #bb2d3b; }
+        .bg-custom-sidebar {
+            background-color: #000000;
+            min-height: 100vh;
+        }
+        body {
+            background-color: #f2f2f2;
+            overflow-x: hidden;
+        }
+        .nav-pills .nav-link {
+            color: #cfd3d6;
+            border-radius: 6px;
+            transition: all 0.2s ease-in-out;
+            margin-bottom: 4px;
+        }
+        .nav-pills .nav-link:hover {
+            background-color: #333333;
+            color: #ffffff;
+            transform: translateX(5px);
+        }
+        .nav-pills .nav-link.active {
+            background-color: #00bcd4 !important;
+            color: #ffffff !important;
+            font-weight: bold;
+            transform: translateX(5px);
+        }
+        .content-card {
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 25px;
+        }
     </style>
 </head>
 <body>
 
-    <!-- Sidebar Kiri -->
-    <div class="sidebar">
-        <div class="sidebar-top">
-            <h2>My Website</h2>
-            <a href="dashboard.php">Dashboard</a>
-            <a href="kelola_siswa.php">Data Siswa</a>
-            <a href="kelola_guru.php">Data Guru</a>
-            <!-- Menu Kelas Aktif -->
-            <a href="kelola_kelas.php" class="active">Kelas</a>
-            <a href="laporan.php">Laporan</a>
-            <a href="about.php">About Me</a>
+<div class="container-fluid d-flex p-0" style="min-height: 100vh;">
+    <!-- SIDEBAR LENGKAP -->
+    <div class="col-md-3 col-lg-2 bg-custom-sidebar p-3 d-flex flex-column justify-content-between">
+        <div>
+            <h4 class="text-white mb-4 fw-bold pb-2 border-bottom border-secondary">
+                My Website
+            </h4>
+            <ul class="nav nav-pills flex-column">
+                <li class="nav-item">
+                    <a href="dashboard.php" class="nav-link">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a href="kelola_siswa.php" class="nav-link">Kelola Siswa</a>
+                </li>
+                <li class="nav-item">
+                    <a href="kelola_guru.php" class="nav-link">Kelola Guru</a>
+                </li>
+                <li class="nav-item">
+                    <a href="kelola_kelas.php" class="nav-link active">Kelola Kelas</a>
+                </li>
+                <li class="nav-item">
+                    <a href="kelola_tahun_ajaran.php" class="nav-link">Kelola Tahun Ajaran</a>
+                </li>
+                <li class="nav-item">
+                    <a href="penempatan_siswa.php" class="nav-link">Penempatan Siswa</a>
+                </li>
+                <li class="nav-item">
+                    <a href="kelola_wali_kelas.php" class="nav-link">Kelola Wali Kelas</a>
+                </li>
+                <li class="nav-item">
+                    <a href="kategori_pelanggaran.php" class="nav-link">Kategori Pelanggaran</a>
+                </li>
+                <li class="nav-item">
+                    <a href="jenis_pelanggaran.php" class="nav-link">Jenis Pelanggaran</a>
+                </li>
+                <li class="nav-item">
+                    <a href="laporan.php" class="nav-link">Cetak / Laporan</a>
+                </li>
+                
+                <!-- PELANGGARAN -->
+                <li class="text-muted small mt-3 mb-1 px-2 fw-bold text-uppercase">PELANGGARAN</li>
+                <li class="nav-item">
+                    <a href="catat_pelanggaran.php" class="nav-link">Catat Pelanggaran</a>
+                </li>
+                <li class="nav-item">
+                    <a href="tindakan.php" class="nav-link">Tindakan</a>
+                </li>
+                <li class="nav-item">
+                    <a href="laporan.php" class="nav-link">Laporan</a>
+                </li>
+                <li class="nav-item">
+                    <a href="riwayat.php" class="nav-link">Riwayat</a>
+                </li>
+                <li class="nav-item">
+                    <a href="rekap_poin.php" class="nav-link">Rekap Poin</a>
+                </li>
+            </ul>
         </div>
         <div>
-            <a href="logout.php" class="logout">Logout</a>
+            <hr class="text-secondary">
+            <a href="logout.php" class="btn text-white w-100 text-start fw-bold" style="background-color: #a91d3a;">
+                Logout
+            </a>
         </div>
     </div>
 
-    <!-- Area Kanan -->
-    <div class="main-content">
-        <div class="header-top">
-            <div>
-                <h1><?= htmlspecialchars($title) ?></h1>
-                <p style="color: #666; font-size: 13px; margin-top: 5px;">Kelola data kelas terdaftar pada sistem.</p>
+    <!-- KONTEN UTAMA -->
+    <main class="flex-grow-1 p-4">
+        <div class="content-card shadow-sm">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h2><?= htmlspecialchars($title) ?></h2>
+                    <p class="text-muted mb-0">Kelola data kelas terdaftar pada sistem.</p>
+                </div>
+                <a href="tambah_kelas.php" class="btn btn-primary btn-sm fw-semibold">+ Tambah Kelas</a>
             </div>
-            <a href="tambah_kelas.php" class="btn-tambah">+ Tambah Kelas</a>
-        </div>
+            <hr>
 
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>No</th>
-                    <th>Nama Kelas</th>
-                    <th>Tingkat</th>
-                    <th>Jurusan</th>
-                    <th>Status</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php
-                if ($db_pdo) {
-                    try {
-                        $rows = $db_pdo->query("
-                            SELECT id, nama, tingkat, jurusan, status_aktif 
-                            FROM t_kelas 
-                            ORDER BY id
-                        ")->fetchAll(PDO::FETCH_ASSOC);
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="5%">No</th>
+                            <th>Nama Kelas</th>
+                            <th>Tingkat</th>
+                            <th>Jurusan</th>
+                            <th>Status</th>
+                            <th width="15%" class="text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        if ($db_pdo) {
+                            try {
+                                $rows = $db_pdo->query("
+                                    SELECT id, nama, tingkat, jurusan, status_aktif 
+                                    FROM t_kelas 
+                                    ORDER BY id
+                                ")->fetchAll(PDO::FETCH_ASSOC);
 
-                        if (count($rows) > 0) {
-                            foreach ($rows as $i => $row) {
-                                ?>
-                                <tr>
-                                    <td><?= $i + 1 ?></td>
-                                    <td><?= htmlspecialchars($row['nama']) ?></td>
-                                    <td><?= htmlspecialchars($row['tingkat']) ?></td>
-                                    <td><?= htmlspecialchars($row['jurusan']) ?></td>
-                                    <td><?= $row['status_aktif'] ? 'Aktif' : 'Tidak Aktif' ?></td>
-                                    <td>
-                                        <a href="edit_kelas.php?id=<?= $row['id'] ?>" class="btn-action btn-edit">Ubah</a>
-                                        <a href="hapus_kelas.php?id=<?= $row['id'] ?>" class="btn-action btn-delete" onclick="return confirm('Yakin ingin menghapus?')">Hapus</a>
-                                    </td>
-                                </tr>
-                                <?php
+                                if (count($rows) > 0) {
+                                    foreach ($rows as $i => $row) {
+                                        ?>
+                                        <tr>
+                                            <td><?= $i + 1 ?></td>
+                                            <td><?= htmlspecialchars($row['nama']) ?></td>
+                                            <td><?= htmlspecialchars($row['tingkat']) ?></td>
+                                            <td><?= htmlspecialchars($row['jurusan']) ?></td>
+                                            <td><?= $row['status_aktif'] ? 'Aktif' : 'Tidak Aktif' ?></td>
+                                            <td class="text-center">
+                                                <a href="edit_kelas.php?id=<?= $row['id'] ?>" class="btn btn-warning btn-sm text-dark px-2 fw-semibold">Ubah</a>
+                                                <a href="hapus_kelas.php?id=<?= $row['id'] ?>" class="btn btn-danger btn-sm text-white px-2 fw-semibold" onclick="return confirm('Yakin ingin menghapus?')">Hapus</a>
+                                            </td>
+                                        </tr>
+                                        <?php
+                                    }
+                                } else {
+                                    echo '<tr><td colspan="6" class="text-center text-muted py-4">Belum ada data kelas.</td></tr>';
+                                }
+                            } catch (Exception $e) {
+                                echo '<tr><td colspan="6" class="text-center text-danger py-4">Error memuat data: ' . htmlspecialchars($e->getMessage()) . '</td></tr>';
                             }
                         } else {
-                            echo '<tr><td colspan="6" style="text-align: center; color: #777;">Belum ada data kelas.</td></tr>';
+                            echo '<tr><td colspan="6" class="text-center text-danger py-4">Koneksi database ($pdo) belum terhubung dengan benar di config.php.</td></tr>';
                         }
-                    } catch (Exception $e) {
-                        echo '<tr><td colspan="6" style="color: red;">Error memuat data: ' . $e->getMessage() . '</td></tr>';
-                    }
-                } else {
-                    echo '<tr><td colspan="6" style="color: red;">Koneksi database ($pdo) belum terhubung dengan benar di config.php.</td></tr>';
-                }
-                ?>
-            </tbody>
-        </table>
-    </div>
+                        ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

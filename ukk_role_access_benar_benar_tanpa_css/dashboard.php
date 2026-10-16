@@ -1,6 +1,4 @@
 <?php
-
-
 $title = 'Dashboard';
 $role = strtolower($_SESSION['role'] ?? '');
 

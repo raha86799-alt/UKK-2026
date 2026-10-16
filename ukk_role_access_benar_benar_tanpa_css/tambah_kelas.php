@@ -1,6 +1,5 @@
 <?php
-
-
+include 'koneksi.php';
 $title = 'Tambah Kelas';
 $section = 'admin';
 
