@@ -4,8 +4,9 @@ require_once 'auth.php';
 require_once 'config.php'; 
 
 if (function_exists('requireRole')) {
-    requireRole(['admin']);
+    requireRole(['admin', 'guru']);
 }
+
 
 $title = 'Kelola Guru'; 
 $section = 'admin';

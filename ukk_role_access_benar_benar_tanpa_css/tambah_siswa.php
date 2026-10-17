@@ -4,7 +4,9 @@ require_once 'auth.php';
 require_once 'config.php'; 
 
 if (function_exists('requireRole')) {
-    requireRole(['admin']);
+   if (function_exists('requireRole')) {
+    requireRole(['admin', 'guru']);
+}
 }
 
 $title = 'Tambah Siswa';

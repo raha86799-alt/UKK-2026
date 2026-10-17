@@ -3,15 +3,16 @@ session_start();
 require_once 'auth.php'; 
 require_once 'config.php'; 
 
+// Mengizinkan Admin dan Guru mengakses halaman ini
 if (function_exists('requireRole')) {
-    requireRole(['admin']);
+    requireRole(['admin', 'guru']);
 }
 
 $title = 'Kelola Siswa'; 
 $section = 'admin';
 
 // Koneksi database
-$db_connection = $conn ?? $koneksi ?? mysqli_connect("localhost", "root", "", "db_ukk_2026");
+$db_connection = $conn ?? $koneksi ?? @mysqli_connect("localhost", "root", "", "db_ukk_2026");
 
 // Ambil data dari tabel t_siswa
 $query = "SELECT * FROM t_siswa";
@@ -134,6 +135,7 @@ $result = $db_connection ? @mysqli_query($db_connection, $query) : false;
                     <h2>Kelola Siswa</h2>
                     <p class="text-muted mb-0">Kelola data siswa terdaftar pada sistem.</p>
                 </div>
+                <!-- Tombol Tambah Siswa dimunculkan tanpa batasan role -->
                 <a href="tambah_siswa.php" class="btn btn-primary btn-sm fw-semibold">+ Tambah Siswa</a>
             </div>
             <hr>
@@ -167,6 +169,7 @@ $result = $db_connection ? @mysqli_query($db_connection, $query) : false;
                                     <td><?= htmlspecialchars($row['tanggal_lahir'] ?? '-') ?></td>
                                     <td><?= htmlspecialchars($row['alamat'] ?? '-') ?></td>
                                     <td class="text-center">
+                                        <!-- Tombol Ubah dan Hapus dimunculkan untuk semua role -->
                                         <a href="edit_siswa.php?id=<?= $row['id'] ?>" class="btn btn-warning btn-sm text-dark px-2 fw-semibold">Ubah</a> 
                                         <a href="hapus_siswa.php?id=<?= $row['id'] ?>" class="btn btn-danger btn-sm text-white px-2 fw-semibold" onclick="return confirm('Yakin ingin menghapus data ini?')">Hapus</a>
                                     </td>

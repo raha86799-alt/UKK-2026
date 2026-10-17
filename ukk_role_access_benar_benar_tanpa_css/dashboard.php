@@ -1,6 +1,10 @@
 <?php
+session_start(); // Pastikan session dimulai untuk membaca role pengguna
+
 $title = 'Dashboard';
-$role = strtolower($_SESSION['role'] ?? '');
+
+// Ambil role dari session, ubah ke lowercase, jika kosong beri nilai default 'guru' (atau bisa diubah sesuai kebutuhan)
+$role = strtolower(trim($_SESSION['role'] ?? 'guru'));
 
 $labels = [
     'admin'      => ['title' => 'Dashboard Administrator', 'desc' => 'Kelola seluruh data sistem, pengguna, pelanggaran, laporan, dan export.'],
@@ -8,12 +12,14 @@ $labels = [
     'wali_kelas' => ['title' => 'Dashboard Wali Kelas', 'desc' => 'Pantau laporan, riwayat, dan rekap poin siswa di kelas.']
 ];
 
+// Jika role tidak terdaftar di labels, arahkan kembali ke default guru atau admin
 $view =$labels[$role] ?? $labels['guru'];
 
-// Menyesuaikan koneksi database PDO
+// Menyesuaikan koneksi database PDO / MySQLi
 $db_connection =$pdo ?? $conn ?? $koneksi ?? null;
 
 $counts = ['Siswa' => 0, 'Guru' => 0, 'Kelas' => 0, 'Jenis Pelanggaran' => 0, 'Catatan' => 0];
+
 if ($db_connection) {$tables = [
         't_siswa'             => 'Siswa',
         't_guru'              => 'Guru',
@@ -24,8 +30,14 @@ if ($db_connection) {$tables = [
     
     foreach ($tables as $t =>$label) {
         try {
-            $counts[$label] = (int)$db_connection->query("SELECT COUNT(*) FROM `$t`")->fetchColumn();
-        } catch (Throwable $e) {
+            // Mengecek apakah koneksi menggunakan PDO atau MySQLi
+            if ($db_connection instanceof PDO) {$counts[$label] = (int)$db_connection->query("SELECT COUNT(*) FROM `$t`")->fetchColumn();
+            } else {
+                // Jika menggunakan MySQLi biasa
+                $result =$db_connection->query("SELECT COUNT(*) as total FROM `$t`");
+                if ($result) {
+                    $row =$result->fetch_assoc();
+                    $counts[$label] = (int)($row['total'] ?? 0); } } } catch (Throwable$e) {
             $counts[$label] = 0;
         }
     }
@@ -117,6 +129,11 @@ if ($db_connection) {$tables = [
         <h2><?= htmlspecialchars($view['title']) ?></h2>
         <p class="text-muted"><?= htmlspecialchars($view['desc']) ?></p>
         <hr class="mb-4">
+
+        <!-- Informasi Debug Singkat untuk Memastikan Role Terbaca -->
+        <div class="alert alert-info py-2 mb-3" style="font-size: 0.9rem;">
+            Status Login Role Anda saat ini: <strong><?= htmlspecialchars($role) ?></strong>
+        </div>
 
         <h4 class="mb-3">Ringkasan Data</h4>
         <div class="row">
