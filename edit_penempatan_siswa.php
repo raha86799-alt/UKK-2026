@@ -38,10 +38,10 @@ if (!$penempatan) {
 
 // Proses update data
 if (isset($_POST['submit'])) {
-    $siswa_id        = trim($_POST['siswa_id'] ?? '');
-    $kelas_id        = trim($_POST['kelas_id'] ?? '');
+    $siswa_id         = trim($_POST['siswa_id'] ?? '');
+    $kelas_id         = trim($_POST['kelas_id'] ?? '');
     $tahun_ajaran_id = trim($_POST['tahun_ajaran_id'] ?? '');
-    $status_aktif    = isset($_POST['status_aktif']) ? 1 : 0;
+    $status_aktif     = isset($_POST['status_aktif']) ? 1 : 0;
 
     if ($db_pdo) {
         try {

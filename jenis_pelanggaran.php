@@ -3,14 +3,27 @@ session_start();
 require_once 'auth.php'; 
 require_once 'config.php'; 
 
+// Mengizinkan Admin mengakses halaman ini
 if (function_exists('requireRole')) {
     requireRole(['admin']);
 }
 
-$title = 'Kelola Jenis Pelanggaran';
+$title = 'Kelola Jenis Pelanggaran'; 
 $section = 'admin';
 
+// Koneksi database menggunakan PDO
 $db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
+
+// Ambil data dari tabel jenis pelanggaran
+$rows = [];
+if ($db_pdo) {
+    try {
+        $stmt = $db_pdo->query("SELECT * FROM t_jenis_pelanggaran ORDER BY id DESC");
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        // Handle error query jika tabel belum dibuat
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -24,126 +37,97 @@ $db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
     <link href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     
     <style>
-        .bg-custom-sidebar { background-color: #000000; min-height: 100vh; }
-        body { background-color: #f2f2f2; overflow-x: hidden; }
-        .nav-pills .nav-link { color: #cfd3d6; border-radius: 6px; transition: all 0.2s ease-in-out; margin-bottom: 4px; }
-        .nav-pills .nav-link:hover { background-color: #333333; color: #ffffff; transform: translateX(5px); }
-        .nav-pills .nav-link.active { background-color: #00bcd4 !important; color: #ffffff !important; font-weight: bold; transform: translateX(5px); }
-        .content-card { background-color: #ffffff; border: 1px solid #ddd; border-radius: 6px; padding: 25px; }
+        body {
+            background-color: #f4f4f4;
+            overflow-x: hidden;
+            margin: 0;
+        }
+        .content-card {
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .nav-pills .nav-link.active {
+            background-color: #00bcd4 !important;
+            color: #ffffff !important;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
 
 <div class="container-fluid d-flex p-0" style="min-height: 100vh;">
-    <!-- SIDEBAR LENGKAP -->
-    <div class="col-md-3 col-lg-2 bg-custom-sidebar p-3 d-flex flex-column justify-content-between">
-        <div>
-            <h4 class="text-white mb-4 fw-bold pb-2 border-bottom border-secondary">My Website</h4>
-            <ul class="nav nav-pills flex-column">
-                <li class="nav-item"><a href="dashboard.php" class="nav-link">Dashboard</a></li>
-                <li class="nav-item"><a href="kelola_siswa.php" class="nav-link">Kelola Siswa</a></li>
-                <li class="nav-item"><a href="kelola_guru.php" class="nav-link">Kelola Guru</a></li>
-                <li class="nav-item"><a href="kelola_kelas.php" class="nav-link">Kelola Kelas</a></li>
-                <li class="nav-item"><a href="kelola_tahun_ajaran.php" class="nav-link">Kelola Tahun Ajaran</a></li>
-                <li class="nav-item"><a href="penempatan_siswa.php" class="nav-link">Penempatan Siswa</a></li>
-                <li class="nav-item"><a href="kelola_wali_kelas.php" class="nav-link">Kelola Wali Kelas</a></li>
-                <li class="nav-item"><a href="kategori_pelanggaran.php" class="nav-link">Kategori Pelanggaran</a></li>
-                <li class="nav-item"><a href="jenis_pelanggaran.php" class="nav-link active">Jenis Pelanggaran</a></li>
-                <li class="nav-item"><a href="laporan.php" class="nav-link">Cetak / Laporan</a></li>
-                <li class="text-muted small mt-3 mb-1 px-2 fw-bold text-uppercase">PELANGGARAN</li>
-                <li class="nav-item"><a href="catat_pelanggaran.php" class="nav-link">Catat Pelanggaran</a></li>
-                <li class="nav-item"><a href="tindakan.php" class="nav-link">Tindakan</a></li>
-                <li class="nav-item"><a href="laporan.php" class="nav-link">Laporan</a></li>
-                <li class="nav-item"><a href="riwayat.php" class="nav-link">Riwayat</a></li>
-                <li class="nav-item"><a href="rekap_poin.php" class="nav-link">Rekap Poin</a></li>
-            </ul>
-        </div>
-        <div>
-            <hr class="text-secondary">
-            <a href="logout.php" class="btn text-white w-100 text-start fw-bold" style="background-color: #a91d3a;">Logout</a>
-        </div>
-    </div>
+    <div class="row flex-grow-1 g-0 w-100">
 
-    <!-- KONTEN UTAMA -->
-    <main class="flex-grow-1 p-4">
-        <div class="content-card shadow-sm">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                    <h2><?= htmlspecialchars($title) ?></h2>
-                    <p class="text-muted mb-0">Kelola data jenis pelanggaran beserta bobot poin pada sistem.</p>
+        <!-- Memanggil Sidebar Terpusat -->
+        <?php include "layout/sidebar.php"; ?>
+
+        <!-- KONTEN UTAMA -->
+        <main class="col-md-9 col-lg-10 p-4">
+            <div class="content-card shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h2><?= htmlspecialchars($title) ?></h2>
+                        <p class="text-muted mb-0">Kelola data jenis pelanggaran dan bobot poin pada sistem.</p>
+                    </div>
+                    <a href="tambah_jenis_pelanggaran.php" class="btn btn-primary btn-sm fw-semibold">+ Tambah Jenis Pelanggaran</a>
                 </div>
-                <a href="tambah_jenis_pelanggaran.php" class="btn btn-primary btn-sm fw-semibold">+ Tambah Jenis Pelanggaran</a>
-            </div>
-            <hr>
+                <hr>
 
-            <div class="table-responsive">
-                <!-- Tambahkan id="tableJenisPelanggaran" pada tag table -->
-                <table id="tableJenisPelanggaran" class="table table-bordered table-striped align-middle w-100">
-                    <thead class="table-light">
-                        <tr>
-                            <th width="5%">No</th>
-                            <th>Kategori</th>
-                            <th>Kode</th>
-                            <th>Nama Pelanggaran</th>
-                            <th>Poin</th>
-                            <th>Deskripsi</th>
-                            <th>Status</th>
-                            <th width="15%" class="text-center">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php
-                        if ($db_pdo) {
-                            try {
-                                $stmt = $db_pdo->query("
-                                    SELECT
-                                        p.id,
-                                        p.kode,
-                                        p.nama,
-                                        p.poin,
-                                        p.deksripsi,
-                                        p.status_aktif,
-                                        k.nama AS nama_kategori
-                                    FROM t_pelanggaran p
-                                    LEFT JOIN t_pelanggaran_kategori k
-                                        ON p.pelanggaran_kategori_id = k.id
-                                    ORDER BY p.id DESC
-                                ");
-                                $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
+                <div class="table-responsive">
+                    <table id="tableJenisPelanggaran" class="table table-bordered table-striped align-middle w-100">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="5%">No</th>
+                                <th>Nama Pelanggaran</th>
+                                <th>Kategori</th>
+                                <th>Poin</th>
+                                <th width="15%" class="text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php 
+                            $no = 1;
+                            if ($db_pdo) {
                                 if (count($rows) > 0) {
-                                    foreach ($rows as $i => $row) {
+                                    foreach ($rows as $row) {
                                         ?>
                                         <tr>
-                                            <td><?= $i + 1 ?></td>
-                                            <td><?= htmlspecialchars($row['nama_kategori'] ?? '-') ?></td>
-                                            <td><?= htmlspecialchars($row['kode']) ?></td>
-                                            <td><?= htmlspecialchars($row['nama']) ?></td>
-                                            <td><span class="badge bg-danger"><?= htmlspecialchars($row['poin']) ?> Poin</span></td>
-                                            <td><?= htmlspecialchars($row['deksripsi'] ?? '-') ?></td>
-                                            <td><?= $row['status_aktif'] ? 'Aktif' : 'Tidak Aktif' ?></td>
+                                            <td><?= $no++ ?></td>
+                                            <td><?= htmlspecialchars($row['nama_pelanggaran'] ?? $row['nama'] ?? '-') ?></td>
+                                            <td><?= htmlspecialchars($row['kategori'] ?? '-') ?></td>
+                                            <td><span class="badge bg-danger"><?= (int)($row['poin'] ?? 0) ?> Poin</span></td>
                                             <td class="text-center">
-                                                <a href="edit_jenis_pelanggaran.php?id=<?= $row['id'] ?>" class="btn btn-warning btn-sm text-dark px-2 fw-semibold">Ubah</a>
+                                                <a href="edit_jenis_pelanggaran.php?id=<?= $row['id'] ?>" class="btn btn-warning btn-sm text-dark px-2 fw-semibold">Ubah</a> 
                                                 <a href="hapus_jenis_pelanggaran.php?id=<?= $row['id'] ?>" class="btn btn-danger btn-sm text-white px-2 fw-semibold" onclick="return confirm('Yakin ingin menghapus data ini?')">Hapus</a>
                                             </td>
                                         </tr>
-                                        <?php
+                                        <?php 
                                     }
                                 } else {
-                                    echo '<tr><td colspan="8" class="text-center text-muted py-4">Belum ada data jenis pelanggaran.</td></tr>';
+                                    ?>
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4">Belum ada data jenis pelanggaran di dalam database.</td>
+                                    </tr>
+                                    <?php 
                                 }
-                            } catch (Exception $e) {
-                                echo '<tr><td colspan="8" class="text-center text-danger py-4">Error memuat data: ' . htmlspecialchars($e->getMessage()) . '</td></tr>';
+                            } else {
+                                ?>
+                                <tr>
+                                    <td colspan="5" class="text-center text-danger py-4">Koneksi database belum terhubung dengan benar.</td>
+                                </tr>
+                                <?php
                             }
-                        } else {
-                            echo '<tr><td colspan="8" class="text-center text-danger py-4">Koneksi database belum terhubung dengan benar.</td></tr>';
-                        }
-                        ?>
-                    </tbody>
-                </table>
+                            ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
-    </main>
+        </main>
+
+    </div>
 </div>
 
 <!-- jQuery (Diperlukan oleh DataTables) -->
@@ -159,7 +143,7 @@ $db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
     $(document).ready(function() {
         $('#tableJenisPelanggaran').DataTable({
             "language": {
-                "url": "//cdn.datatables.net/plug-ins/1.13.8/i18n/id.json" // Mengubah teks DataTables menjadi Bahasa Indonesia
+                "url": "//cdn.datatables.net/plug-ins/1.13.8/i18n/id.json"
             }
         });
     });

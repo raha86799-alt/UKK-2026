@@ -8,6 +8,7 @@ if (function_exists('requireRole')) {
 }
 
 $title = 'Ubah Wali Kelas';
+$section = 'admin';
 $db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
 
 $id = $_GET['id'] ?? null;
@@ -16,6 +17,7 @@ if (!$id || !$db_pdo) {
     exit;
 }
 
+// Ambil data wali kelas berdasarkan ID
 $stmt = $db_pdo->prepare("SELECT * FROM t_wali_kelas WHERE id = ?");
 $stmt->execute([$id]);
 $wali = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -25,6 +27,7 @@ if (!$wali) {
     exit;
 }
 
+// Proses Update Data
 if (isset($_POST['update'])) {
     $guru_id         = $_POST['guru_id'];
     $kelas_id        = $_POST['kelas_id'];
@@ -52,114 +55,108 @@ if (isset($_POST['update'])) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <title><?= $title ?></title>
     <style>
-        .bg-custom-sidebar { background-color: #000000; min-height: 100vh; }
-        body { background-color: #f2f2f2; overflow-x: hidden; }
-        .nav-pills .nav-link { color: #cfd3d6; border-radius: 6px; transition: all 0.2s ease-in-out; margin-bottom: 4px; }
-        .nav-pills .nav-link:hover { background-color: #333333; color: #ffffff; transform: translateX(5px); }
-        .nav-pills .nav-link.active { background-color: #00bcd4 !important; color: #ffffff !important; font-weight: bold; transform: translateX(5px); }
-        .content-card { background-color: #ffffff; border: 1px solid #ddd; border-radius: 6px; padding: 25px; }
+        body {
+            background-color: #f4f4f4;
+            overflow-x: hidden;
+            margin: 0;
+        }
+        .content-card {
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .nav-pills .nav-link.active {
+            background-color: #00bcd4 !important;
+            color: #ffffff !important;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
 
 <div class="container-fluid d-flex p-0" style="min-height: 100vh;">
-    <!-- SIDEBAR -->
-    <div class="col-md-3 col-lg-2 bg-custom-sidebar p-3 d-flex flex-column justify-content-between">
-        <div>
-            <h4 class="text-white mb-4 fw-bold pb-2 border-bottom border-secondary">My Website</h4>
-            <ul class="nav nav-pills flex-column">
-                       <li class="nav-item">
-                    <a href="dashboard.php" class="nav-link active">Dashboard</a>
-                </li>
-                <li class="nav-item">
-                    <a href="kelola_siswa.php" class="nav-link">Data Siswa</a>
-                </li>
-                <li class="nav-item">
-                    <a href="kelola_guru.php" class="nav-link">Data Guru</a>
-                </li>
-                <li class="nav-item">
-                    <a href="kelola_kelas.php" class="nav-link">Kelas</a>
-                </li>
-                  <li class="nav-item">
-                    <a href="penempatan_siswa.php" class="nav-link">Penempatan Siswa</a>
-                </li>
-                <li class="nav-item">
-                    <a href="kategori_pelanggaran.php" class="nav-link">Kategori pelanggaran</a>
-                </li>
-                <li class="nav-item">
-                    <a href="About.php" class="nav-link">About</a>
-                </li>
-        </div>
-        <div>
-            <hr class="text-secondary">
-            <a href="logout.php" class="btn text-white w-100 text-start fw-bold" style="background-color: #a91d3a;">Logout</a>
-        </div>
-    </div>
+    <div class="row flex-grow-1 g-0 w-100">
 
-    <!-- KONTEN UTAMA -->
-    <main class="flex-grow-1 p-4">
-        <div class="content-card shadow-sm">
-            <div class="mb-3">
-                <h2>Ubah Wali Kelas</h2>
-                <p class="text-muted mb-0">Perbarui data penugasan wali kelas.</p>
+        <!-- Memanggil Sidebar Terpusat -->
+        <?php include "layout/sidebar.php"; ?>
+
+        <!-- KONTEN UTAMA FORM UBAH WALI KELAS -->
+        <main class="col-md-9 col-lg-10 p-4">
+            <div class="content-card shadow-sm">
+                <div class="mb-3">
+                    <h2><?= htmlspecialchars($title) ?></h2>
+                    <p class="text-muted mb-0">Perbarui data penugasan guru sebagai wali kelas.</p>
+                </div>
+                <hr>
+
+                <form action="" method="POST">
+                    <div class="mb-3">
+                        <label for="guru_id" class="form-label fw-bold">Guru</label>
+                        <select class="form-select" id="guru_id" name="guru_id" required>
+                            <option value="">-- Pilih Guru --</option>
+                            <?php
+                            if ($db_pdo) {
+                                $guruList = $db_pdo->query("SELECT id, nip, nama FROM t_guru ORDER BY nama ASC")->fetchAll(PDO::FETCH_ASSOC);
+                                foreach ($guruList as $g) {
+                                    $selected = ($g['id'] == $wali['guru_id']) ? 'selected' : '';
+                                    echo "<option value='{$g['id']}' {$selected}>{$g['nip']} - {$g['nama']}</option>";
+                                }
+                            }
+                            ?>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="kelas_id" class="form-label fw-bold">Kelas</label>
+                        <select class="form-select" id="kelas_id" name="kelas_id" required>
+                            <option value="">-- Pilih Kelas --</option>
+                            <?php
+                            if ($db_pdo) {
+                                $kelasList = $db_pdo->query("SELECT id, nama FROM t_kelas ORDER BY nama ASC")->fetchAll(PDO::FETCH_ASSOC);
+                                foreach ($kelasList as $k) {
+                                    $selected = ($k['id'] == $wali['kelas_id']) ? 'selected' : '';
+                                    echo "<option value='{$k['id']}' {$selected}>{$k['nama']}</option>";
+                                }
+                            }
+                            ?>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="tahun_ajaran_id" class="form-label fw-bold">Tahun Ajaran</label>
+                        <select class="form-select" id="tahun_ajaran_id" name="tahun_ajaran_id" required>
+                            <option value="">-- Pilih Tahun Ajaran --</option>
+                            <?php
+                            if ($db_pdo) {
+                                $tahunList = $db_pdo->query("SELECT id, nama FROM t_tahun_ajaran ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
+                                foreach ($tahunList as $ta) {
+                                    $selected = ($ta['id'] == $wali['tahun_ajaran_id']) ? 'selected' : '';
+                                    echo "<option value='{$ta['id']}' {$selected}>{$ta['nama']}</option>";
+                                }
+                            }
+                            ?>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="status_aktif" class="form-label fw-bold">Status Aktif</label>
+                        <select class="form-select" id="status_aktif" name="status_aktif" required>
+                            <option value="1" <?= ($wali['status_aktif'] == 1) ? 'selected' : '' ?>>Aktif</option>
+                            <option value="0" <?= ($wali['status_aktif'] == 0) ? 'selected' : '' ?>>Tidak Aktif</option>
+                        </select>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" name="update" class="btn btn-warning fw-semibold px-4 text-dark">Simpan Perubahan</button>
+                        <a href="kelola_wali_kelas.php" class="btn btn-secondary fw-semibold px-4 ms-2">Kembali</a>
+                    </div>
+                </form>
             </div>
-            <hr>
+        </main>
 
-            <form action="" method="POST">
-                <div class="mb-3">
-                    <label for="guru_id" class="form-label fw-bold">Guru</label>
-                    <select class="form-select" id="guru_id" name="guru_id" required>
-                        <?php
-                        $guruList = $db_pdo->query("SELECT id, nip, nama FROM t_guru ORDER BY nama ASC")->fetchAll(PDO::FETCH_ASSOC);
-                        foreach ($guruList as $g) {
-                            $selected = ($g['id'] == $wali['guru_id']) ? 'selected' : '';
-                            echo "<option value='{$g['id']}' $selected>{$g['nip']} - {$g['nama']}</option>";
-                        }
-                        ?>
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label for="kelas_id" class="form-label fw-bold">Kelas</label>
-                    <select class="form-select" id="kelas_id" name="kelas_id" required>
-                        <?php
-                        $kelasList = $db_pdo->query("SELECT id, nama FROM t_kelas ORDER BY nama ASC")->fetchAll(PDO::FETCH_ASSOC);
-                        foreach ($kelasList as $k) {
-                            $selected = ($k['id'] == $wali['kelas_id']) ? 'selected' : '';
-                            echo "<option value='{$k['id']}' $selected>{$k['nama']}</option>";
-                        }
-                        ?>
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label for="tahun_ajaran_id" class="form-label fw-bold">Tahun Ajaran</label>
-                    <select class="form-select" id="tahun_ajaran_id" name="tahun_ajaran_id" required>
-                        <?php
-                        $tahunList = $db_pdo->query("SELECT id, nama FROM t_tahun_ajaran ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
-                        foreach ($tahunList as $ta) {
-                            $selected = ($ta['id'] == $wali['tahun_ajaran_id']) ? 'selected' : '';
-                            echo "<option value='{$ta['id']}' $selected>{$ta['nama']}</option>";
-                        }
-                        ?>
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label for="status_aktif" class="form-label fw-bold">Status Aktif</label>
-                    <select class="form-select" id="status_aktif" name="status_aktif" required>
-                        <option value="1" <?= ($wali['status_aktif'] == 1) ? 'selected' : '' ?>>Aktif</option>
-                        <option value="0" <?= ($wali['status_aktif'] == 0) ? 'selected' : '' ?>>Tidak Aktif</option>
-                    </select>
-                </div>
-
-                <div class="mt-4">
-                    <button type="submit" name="update" class="btn btn-warning fw-semibold px-4 text-dark">Simpan Perubahan</button>
-                    <a href="kelola_wali_kelas.php" class="btn btn-secondary fw-semibold px-4 ms-2">Kembali</a>
-                </div>
-            </form>
-        </div>
-    </main>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>

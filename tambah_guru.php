@@ -16,15 +16,29 @@ if (isset($_POST['submit'])) {
     $nip   = mysqli_real_escape_string($db_connection, $_POST['nip']);
     $nama  = mysqli_real_escape_string($db_connection, $_POST['nama']);
     $email = mysqli_real_escape_string($db_connection, $_POST['email']);
+    $password = password_hash('123456', PASSWORD_DEFAULT); // Password default: 123456
 
-    $query_insert = "INSERT INTO t_guru (nip, nama, email, created_at, updated_at) 
-                     VALUES ('$nip', '$nama', '$email', NOW(), NOW())";
+    // 1. Masukkan data ke t_user menggunakan kolom email & password (menyesuaikan struktur database umum)
+    $query_user = "INSERT INTO t_user (email, password, role) VALUES ('$email', '$password', 'guru')";
     
-    $insert = mysqli_query($db_connection, $query_insert);
-    if ($insert) {
-        echo "<script>alert('Data guru berhasil ditambahkan!'); window.location='kelola_guru.php';</script>";
+    if (mysqli_query($db_connection, $query_user)) {
+        // Ambil ID user yang baru saja dibuat
+        $user_id = mysqli_insert_id($db_connection);
+
+        // 2. Simpan data ke tabel t_guru dengan menyertakan user_id
+        $query_insert = "INSERT INTO t_guru (user_id, nip, nama, email, created_at, updated_at) 
+                           VALUES ('$user_id', '$nip', '$nama', '$email', NOW(), NOW())";
+        
+        $insert = mysqli_query($db_connection, $query_insert);
+        if ($insert) {
+            echo "<script>alert('Data guru berhasil ditambahkan! (Password default: 123456)'); window.location='kelola_guru.php';</script>";
+        } else {
+            // Jika gagal di tabel guru, hapus user yang terlanjur dibuat agar bersih
+            mysqli_query($db_connection, "DELETE FROM t_user WHERE id = '$user_id'");
+            echo "<script>alert('Gagal menyimpan data guru: " . mysqli_error($db_connection) . "');</script>";
+        }
     } else {
-        echo "<script>alert('Gagal menyimpan data: " . mysqli_error($db_connection) . "');</script>";
+        echo "<script>alert('Gagal membuat akun user: " . mysqli_error($db_connection) . "');</script>";
     }
 }
 ?>

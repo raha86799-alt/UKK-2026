@@ -9,62 +9,26 @@ if (function_exists('requireRole')) {
 
 $title = 'Tambah Jenis Pelanggaran';
 $section = 'admin';
-
 $db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
 
-if (isset($_POST['simpan'])) {
-    $pelanggaran_kategori_id = $_POST['pelanggaran_kategori_id'];
-    $kode = trim($_POST['kode']);
-    $nama = trim($_POST['nama']);
-    $poin = $_POST['poin'];
-    $deksripsi = trim($_POST['deksripsi']);
-    $status_aktif = $_POST['status_aktif'];
+if (isset($_POST['submit'])) {
+    $nama_pelanggaran = trim($_POST['nama_pelanggaran'] ?? '');
+    $kategori         = trim($_POST['kategori'] ?? '');
+    $poin             = (int)($_POST['poin'] ?? 0);
 
-    if ($db_pdo) {
+    if ($db_pdo && !empty($nama_pelanggaran)) {
         try {
-            $stmt = $db_pdo->prepare("
-                INSERT INTO t_pelanggaran
-                (
-                    pelanggaran_kategori_id,
-                    kode,
-                    nama,
-                    poin,
-                    deksripsi,
-                    status_aktif,
-                    created_at,
-                    updated_at
-                )
-                VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
-            ");
-
-            $insert = $stmt->execute([
-                $pelanggaran_kategori_id,
-                $kode,
-                $nama,
-                $poin,
-                $deksripsi,
-                $status_aktif
-            ]);
+            $stmt = $db_pdo->prepare("INSERT INTO t_jenis_pelanggaran (nama_pelanggaran, kategori, poin, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())");
+            $insert = $stmt->execute([$nama_pelanggaran, $kategori, $poin]);
 
             if ($insert) {
                 echo "<script>alert('Jenis pelanggaran berhasil ditambahkan!'); window.location='jenis_pelanggaran.php';</script>";
                 exit;
             }
         } catch (Exception $e) {
-            echo "<script>alert('Gagal menyimpan data: " . $e->getMessage() . "');</script>";
+            echo "<script>alert('Gagal menyimpan data: " . addslashes($e->getMessage()) . "');</script>";
         }
     }
-}
-
-$kategori = [];
-if ($db_pdo) {
-    $stmtKategori = $db_pdo->query("
-        SELECT id, nama
-        FROM t_pelanggaran_kategori
-        WHERE status_aktif = 1
-        ORDER BY nama ASC
-    ");
-    $kategori = $stmtKategori->fetchAll(PDO::FETCH_ASSOC);
 }
 ?>
 <!DOCTYPE html>
@@ -72,108 +36,52 @@ if ($db_pdo) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <title><?= $title ?></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        .bg-custom-sidebar { background-color: #000000; min-height: 100vh; }
-        body { background-color: #f2f2f2; overflow-x: hidden; }
-        .nav-pills .nav-link { color: #cfd3d6; border-radius: 6px; transition: all 0.2s ease-in-out; margin-bottom: 4px; }
-        .nav-pills .nav-link:hover { background-color: #333333; color: #ffffff; transform: translateX(5px); }
-        .nav-pills .nav-link.active { background-color: #00bcd4 !important; color: #ffffff !important; font-weight: bold; transform: translateX(5px); }
-        .content-card { background-color: #ffffff; border: 1px solid #ddd; border-radius: 6px; padding: 25px; }
+        body { background-color: #f4f4f4; overflow-x: hidden; margin: 0; }
+        .content-card { background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .nav-pills .nav-link.active { background-color: #00bcd4 !important; color: #ffffff !important; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container-fluid d-flex p-0" style="min-height: 100vh;">
-    <!-- SIDEBAR LENGKAP -->
-    <div class="col-md-3 col-lg-2 bg-custom-sidebar p-3 d-flex flex-column justify-content-between">
-        <div>
-            <h4 class="text-white mb-4 fw-bold pb-2 border-bottom border-secondary">My Website</h4>
-                     <li class="nav-item">
-                    <a href="dashboard.php" class="nav-link active">Dashboard</a>
-                </li>
-                <li class="nav-item">
-                    <a href="kelola_siswa.php" class="nav-link">Data Siswa</a>
-                </li>
-                <li class="nav-item">
-                    <a href="kelola_guru.php" class="nav-link">Data Guru</a>
-                </li>
-                <li class="nav-item">
-                    <a href="kelola_kelas.php" class="nav-link">Kelas</a>
-                </li>
-                  <li class="nav-item">
-                    <a href="penempatan_siswa.php" class="nav-link">Penempatan Siswa</a>
-                </li>
-                <li class="nav-item">
-                    <a href="kategori_pelanggaran.php" class="nav-link">Kategori pelanggaran</a>
-                </li>
-                <li class="nav-item">
-                    <a href="About.php" class="nav-link">About</a>
-                </li>
-        </div>
-        <div>
-            <hr class="text-secondary">
-            <a href="logout.php" class="btn text-white w-100 text-start fw-bold" style="background-color: #a91d3a;">Logout</a>
-        </div>
-    </div>
+    <div class="row flex-grow-1 g-0 w-100">
+        <?php include "layout/sidebar.php"; ?>
 
-    <!-- KONTEN UTAMA -->
-    <main class="flex-grow-1 p-4">
-        <div class="content-card shadow-sm">
-            <div class="mb-3">
-                <h2>Tambah Jenis Pelanggaran</h2>
-                <p class="text-muted mb-0">Formulir penambahan data jenis pelanggaran baru beserta bobot poinnya.</p>
+        <main class="col-md-9 col-lg-10 p-4">
+            <div class="content-card shadow-sm">
+                <div class="mb-3">
+                    <h2><?= htmlspecialchars($title) ?></h2>
+                    <p class="text-muted mb-0">Formulir penambahan jenis pelanggaran dan bobot poin baru.</p>
+                </div>
+                <hr>
+
+                <form action="" method="POST">
+                    <div class="mb-3">
+                        <label for="nama_pelanggaran" class="form-label fw-bold">Nama Pelanggaran</label>
+                        <input type="text" class="form-control" id="nama_pelanggaran" name="nama_pelanggaran" placeholder="Contoh: Terlambat hadir" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="kategori" class="form-label fw-bold">Kategori</label>
+                        <input type="text" class="form-control" id="kategori" name="kategori" placeholder="Contoh: Kedisiplinan" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="poin" class="form-label fw-bold">Jumlah Poin</label>
+                        <input type="number" class="form-control" id="poin" name="poin" placeholder="Contoh: 10" required>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" name="submit" class="btn btn-warning fw-semibold px-4 text-dark">Simpan</button>
+                        <a href="jenis_pelanggaran.php" class="btn btn-secondary fw-semibold px-4 ms-2">Kembali</a>
+                    </div>
+                </form>
             </div>
-            <hr>
-
-            <form method="POST">
-                <div class="mb-3">
-                    <label for="pelanggaran_kategori_id" class="form-label fw-bold">Kategori Pelanggaran</label>
-                    <select class="form-select" id="pelanggaran_kategori_id" name="pelanggaran_kategori_id" required>
-                        <option value="">-- Pilih Kategori --</option>
-                        <?php foreach ($kategori as $row): ?>
-                            <option value="<?= $row['id'] ?>"><?= htmlspecialchars($row['nama']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label for="kode" class="form-label fw-bold">Kode Pelanggaran</label>
-                    <input type="text" class="form-control" id="kode" name="kode" placeholder="Contoh: P001" required>
-                </div>
-
-                <div class="mb-3">
-                    <label for="nama" class="form-label fw-bold">Nama Pelanggaran</label>
-                    <input type="text" class="form-control" id="nama" name="nama" placeholder="Contoh: Terlambat masuk sekolah" required>
-                </div>
-
-                <div class="mb-3">
-                    <label for="poin" class="form-label fw-bold">Poin Pelanggaran</label>
-                    <input type="number" class="form-control" id="poin" name="poin" min="0" placeholder="Contoh: 10" required>
-                </div>
-
-                <div class="mb-3">
-                    <label for="deksripsi" class="form-label fw-bold">Deskripsi</label>
-                    <textarea class="form-control" id="deksripsi" name="deksripsi" rows="4" placeholder="Masukkan deskripsi jenis pelanggaran..." required></textarea>
-                </div>
-
-                <div class="mb-3">
-                    <label for="status_aktif" class="form-label fw-bold">Status Aktif</label>
-                    <select class="form-select" id="status_aktif" name="status_aktif" required>
-                        <option value="">-- Pilih Status --</option>
-                        <option value="1">Aktif</option>
-                        <option value="0">Tidak Aktif</option>
-                    </select>
-                </div>
-
-                <div class="mt-4">
-                    <button type="submit" name="simpan" class="btn btn-warning fw-semibold px-4 text-dark">Simpan</button>
-                    <a href="jenis_pelanggaran.php" class="btn btn-secondary fw-semibold px-4 ms-2">Batal</a>
-                </div>
-            </form>
-        </div>
-    </main>
+        </main>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
