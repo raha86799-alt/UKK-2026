@@ -42,7 +42,6 @@ $result = $db_connection ? @mysqli_query($db_connection, $query) : false;
             padding: 30px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
-        /* Styling tambahan untuk menyesuaikan warna tombol aktif sidebar jika diperlukan */
         .nav-pills .nav-link.active {
             background-color: #00bcd4 !important;
             color: #ffffff !important;
@@ -75,7 +74,7 @@ $result = $db_connection ? @mysqli_query($db_connection, $query) : false;
                         <thead class="table-light">
                             <tr>
                                 <th width="5%">No</th>
-                                <th>NIP</th>
+                                <th>NIS</th> <!-- Diubah dari NIP menjadi NIS -->
                                 <th>NISN</th>
                                 <th>Nama</th>
                                 <th>Jenis Kelamin</th>
@@ -92,7 +91,7 @@ $result = $db_connection ? @mysqli_query($db_connection, $query) : false;
                                     ?>
                                     <tr>
                                         <td><?= $no++ ?></td>
-                                        <td><?= htmlspecialchars($row['nip'] ?? '-') ?></td>
+                                        <td><?= htmlspecialchars($row['nis'] ?? $row['nip'] ?? '-') ?></td> <!-- Diubah memanggil kolom nis -->
                                         <td><?= htmlspecialchars($row['nisn'] ?? '-') ?></td>
                                         <td><?= htmlspecialchars($row['nama'] ?? '-') ?></td>
                                         <td><?= htmlspecialchars($row['jenis_kelamin'] ?? '-') ?></td>

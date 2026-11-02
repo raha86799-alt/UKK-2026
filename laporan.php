@@ -3,14 +3,7 @@ session_start();
 require_once 'auth.php'; 
 require_once 'config.php'; 
 
-// Mengizinkan Admin dan Wali Kelas mengakses halaman ini
-if (function_exists('requireRole')) {
-    requireRole(['admin', 'wali_kelas']);
-}
-
-$title = 'Laporan';
-$section = 'admin';
-
+$title = 'Rekap Poin Siswa';
 $db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
 ?>
 <!DOCTYPE html>

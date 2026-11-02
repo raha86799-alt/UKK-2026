@@ -13,32 +13,47 @@ $section = 'admin';
 $db_connection = $conn ?? $koneksi ?? mysqli_connect("localhost", "root", "", "db_ukk_2026");
 
 if (isset($_POST['submit'])) {
-    $nip   = mysqli_real_escape_string($db_connection, $_POST['nip']);
-    $nama  = mysqli_real_escape_string($db_connection, $_POST['nama']);
-    $email = mysqli_real_escape_string($db_connection, $_POST['email']);
-    $password = password_hash('123456', PASSWORD_DEFAULT); // Password default: 123456
+    $nis_input = trim($_POST['nis'] ?? '');
+    $nama      = trim($_POST['nama'] ?? '');
+    $email     = trim($_POST['email'] ?? '');
+    $password  = password_hash('123456', PASSWORD_DEFAULT); // Password default: 123456
 
-    // 1. Masukkan data ke t_user menggunakan kolom email & password (menyesuaikan struktur database umum)
-    $query_user = "INSERT INTO t_user (email, password, role) VALUES ('$email', '$password', 'guru')";
+    // Validasi panjang karakter NIS minimal 10 karakter
+    if (strlen($nis_input) < 10) {
+        echo "<script>alert('Gagal: NIS harus diisi minimal 10 karakter/angka!'); window.history.back();</script>";
+        exit;
+    }
+
+    $nis_esc   = mysqli_real_escape_string($db_connection, $nis_input);
+    $nama_esc  = mysqli_real_escape_string($db_connection, $nama);
+    $email_esc = mysqli_real_escape_string($db_connection, $email);
+
+    // 1. Masukkan data ke t_user menggunakan kolom email & password
+    $query_user = "INSERT INTO t_user (email, password, role) VALUES ('$email_esc', '$password', 'guru')";
     
     if (mysqli_query($db_connection, $query_user)) {
         // Ambil ID user yang baru saja dibuat
         $user_id = mysqli_insert_id($db_connection);
 
-        // 2. Simpan data ke tabel t_guru dengan menyertakan user_id
-        $query_insert = "INSERT INTO t_guru (user_id, nip, nama, email, created_at, updated_at) 
-                           VALUES ('$user_id', '$nip', '$nama', '$email', NOW(), NOW())";
+        // Cek apakah kolom di tabel t_guru menggunakan 'nis' atau 'nip'
+        $check_column = mysqli_query($db_connection, "SHOW COLUMNS FROM t_guru LIKE 'nis'");
+        $kolom_nis = (mysqli_num_rows($check_column) > 0) ? 'nis' : 'nip';
+
+        // 2. Simpan data ke tabel t_guru dengan menyertakan user_id dan kolom nis/nip yang sesuai
+        $query_insert = "INSERT INTO t_guru (user_id, $kolom_nis, nama, email, created_at, updated_at) 
+                         VALUES ('$user_id', '$nis_esc', '$nama_esc', '$email_esc', NOW(), NOW())";
         
         $insert = mysqli_query($db_connection, $query_insert);
         if ($insert) {
             echo "<script>alert('Data guru berhasil ditambahkan! (Password default: 123456)'); window.location='kelola_guru.php';</script>";
+            exit;
         } else {
             // Jika gagal di tabel guru, hapus user yang terlanjur dibuat agar bersih
             mysqli_query($db_connection, "DELETE FROM t_user WHERE id = '$user_id'");
-            echo "<script>alert('Gagal menyimpan data guru: " . mysqli_error($db_connection) . "');</script>";
+            echo "<script>alert('Gagal menyimpan data guru: " . mysqli_error($db_connection) . "'); window.history.back();</script>";
         }
     } else {
-        echo "<script>alert('Gagal membuat akun user: " . mysqli_error($db_connection) . "');</script>";
+        echo "<script>alert('Gagal membuat akun user: " . mysqli_error($db_connection) . "'); window.history.back();</script>";
     }
 }
 ?>
@@ -88,16 +103,17 @@ if (isset($_POST['submit'])) {
 
                 <form action="" method="POST">
                     <div class="mb-3">
-                        <label for="nip" class="form-label fw-bold">NIP</label>
-                        <input type="text" class="form-control" id="nip" name="nip" required>
+                        <label for="nis" class="form-label fw-bold">NIS</label>
+                        <input type="text" class="form-control" id="nis" name="nis" placeholder="Minimal 10 karakter" minlength="10" autocomplete="off" required>
+                        <div class="form-text">NIS harus diisi minimal 10 karakter.</div>
                     </div>
                     <div class="mb-3">
                         <label for="nama" class="form-label fw-bold">Nama Guru</label>
-                        <input type="text" class="form-control" id="nama" name="nama" required>
+                        <input type="text" class="form-control" id="nama" name="nama" placeholder="Contoh: Budi Santoso, S.Pd." autocomplete="off" required>
                     </div>
                     <div class="mb-3">
                         <label for="email" class="form-label fw-bold">Email</label>
-                        <input type="email" class="form-control" id="email" name="email" required>
+                        <input type="email" class="form-control" id="email" name="email" placeholder="Contoh: budi@school.com" autocomplete="off" required>
                     </div>
                     <div class="mt-4">
                         <button type="submit" name="submit" class="btn btn-warning fw-semibold px-4 text-dark">Simpan</button>

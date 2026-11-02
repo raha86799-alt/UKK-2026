@@ -14,11 +14,11 @@ $section = 'admin';
 // Koneksi database menggunakan PDO
 $db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
 
-// Ambil data dari tabel jenis pelanggaran
+// Ambil data dari tabel (DIUBAH MENJADI t_pelanggaran SESUAI DATABASE ANDA)
 $rows = [];
 if ($db_pdo) {
     try {
-        $stmt = $db_pdo->query("SELECT * FROM t_jenis_pelanggaran ORDER BY id DESC");
+        $stmt = $db_pdo->query("SELECT * FROM t_pelanggaran ORDER BY id DESC");
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (Exception $e) {
         // Handle error query jika tabel belum dibuat
@@ -93,6 +93,8 @@ if ($db_pdo) {
                             if ($db_pdo) {
                                 if (count($rows) > 0) {
                                     foreach ($rows as $row) {
+                                        // Deteksi otomatis nama kolom ID primary key (bisa 'id' atau 'id_pelanggaran')
+                                        $id_data = $row['id'] ?? $row['id_pelanggaran'] ?? $row['id_jenis_pelanggaran'] ?? 0;
                                         ?>
                                         <tr>
                                             <td><?= $no++ ?></td>
@@ -100,25 +102,15 @@ if ($db_pdo) {
                                             <td><?= htmlspecialchars($row['kategori'] ?? '-') ?></td>
                                             <td><span class="badge bg-danger"><?= (int)($row['poin'] ?? 0) ?> Poin</span></td>
                                             <td class="text-center">
-                                                <a href="edit_jenis_pelanggaran.php?id=<?= $row['id'] ?>" class="btn btn-warning btn-sm text-dark px-2 fw-semibold">Ubah</a> 
-                                                <a href="hapus_jenis_pelanggaran.php?id=<?= $row['id'] ?>" class="btn btn-danger btn-sm text-white px-2 fw-semibold" onclick="return confirm('Yakin ingin menghapus data ini?')">Hapus</a>
+                                                <a href="edit_jenis_pelanggaran.php?id=<?= $id_data ?>" class="btn btn-warning btn-sm text-dark px-2 fw-semibold">Ubah</a> 
+                                                <a href="hapus_jenis_pelanggaran.php?id=<?= $id_data ?>" class="btn btn-danger btn-sm text-white px-2 fw-semibold" onclick="return confirm('Yakin ingin menghapus data ini?')">Hapus</a>
                                             </td>
                                         </tr>
                                         <?php 
                                     }
-                                } else {
-                                    ?>
-                                    <tr>
-                                        <td colspan="5" class="text-center text-muted py-4">Belum ada data jenis pelanggaran di dalam database.</td>
-                                    </tr>
-                                    <?php 
                                 }
-                            } else {
-                                ?>
-                                <tr>
-                                    <td colspan="5" class="text-center text-danger py-4">Koneksi database belum terhubung dengan benar.</td>
-                                </tr>
-                                <?php
+                                // Catatan: Baris colspan sengaja DIHAPUS dari sini agar DataTables 
+                                // tidak mengalami error "Incorrect column count" saat menangani tabel kosong.
                             }
                             ?>
                         </tbody>

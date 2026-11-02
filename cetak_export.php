@@ -1,16 +1,10 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+session_start();
 require_once 'auth.php'; 
 require_once 'config.php'; 
 
-if (function_exists('requireRole')) {
-    requireRole(['admin']);
-}
-
-$title = 'Cetak / Export'; 
-$section = 'admin';
+$title = 'Rekap Poin Siswa';
+$db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
 ?>
 <!DOCTYPE html>
 <html lang="id">

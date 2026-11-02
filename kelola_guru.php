@@ -14,8 +14,11 @@ $section = 'admin';
 // Koneksi database
 $db_connection = $conn ?? $koneksi ?? @mysqli_connect("localhost", "root", "", "db_ukk_2026");
 
-// Ambil data dari tabel t_guru
-$query = "SELECT * FROM t_guru";
+// Ambil data dari tabel t_guru (mendukung dinamis kolom nis atau nip jika ada)
+$check_nis = $db_connection ? @mysqli_query($db_connection, "SHOW COLUMNS FROM t_guru LIKE 'nis'") : false;
+$kolom_id_guru = ($check_nis && mysqli_num_rows($check_nis) > 0) ? 'nis' : 'nip';
+
+$query = "SELECT *, $kolom_id_guru AS nis_val FROM t_guru";
 $result = $db_connection ? @mysqli_query($db_connection, $query) : false;
 ?>
 <!DOCTYPE html>
@@ -74,7 +77,7 @@ $result = $db_connection ? @mysqli_query($db_connection, $query) : false;
                         <thead class="table-light">
                             <tr>
                                 <th width="5%">No</th>
-                                <th>NIP</th>
+                                <th>NIS</th> <!-- Diubah dari NIP menjadi NIS -->
                                 <th>Nama Guru</th>
                                 <th>Email</th>
                                 <th width="15%" class="text-center">Aksi</th>
@@ -88,7 +91,7 @@ $result = $db_connection ? @mysqli_query($db_connection, $query) : false;
                             ?>
                                     <tr>
                                         <td><?= $no++ ?></td>
-                                        <td><?= htmlspecialchars($row['nip'] ?? '-') ?></td>
+                                        <td><?= htmlspecialchars($row['nis_val'] ?? '-') ?></td> <!-- Memanggil data NIS/NIP aman -->
                                         <td><?= htmlspecialchars($row['nama'] ?? '-') ?></td>
                                         <td><?= htmlspecialchars($row['email'] ?? '-') ?></td>
                                         <td class="text-center">

@@ -3,13 +3,7 @@ session_start();
 require_once 'auth.php'; 
 require_once 'config.php'; 
 
-if (function_exists('requireRole')) {
-    requireRole(['admin', 'wali_kelas']);
-}
-
-$title = 'Tindakan';
-$section = 'admin';
-
+$title = 'Rekap Poin Siswa';
 $db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
 ?>
 <!DOCTYPE html>
@@ -41,16 +35,7 @@ $db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
             <h4 class="text-white mb-4 fw-bold pb-2 border-bottom border-secondary">My Website</h4>
             <ul class="nav nav-pills flex-column">
                 <li class="nav-item"><a href="dashboard.php" class="nav-link">Dashboard</a></li>
-                <li class="nav-item"><a href="kelola_siswa.php" class="nav-link">Kelola Siswa</a></li>
-                <li class="nav-item"><a href="kelola_guru.php" class="nav-link">Kelola Guru</a></li>
-                <li class="nav-item"><a href="kelola_kelas.php" class="nav-link">Kelola Kelas</a></li>
-                <li class="nav-item"><a href="kelola_tahun_ajaran.php" class="nav-link">Kelola Tahun Ajaran</a></li>
-                <li class="nav-item"><a href="penempatan_siswa.php" class="nav-link">Penempatan Siswa</a></li>
-                <li class="nav-item"><a href="kelola_wali_kelas.php" class="nav-link">Kelola Wali Kelas</a></li>
-                <li class="nav-item"><a href="kategori_pelanggaran.php" class="nav-link">Kategori Pelanggaran</a></li>
-                <li class="nav-item"><a href="jenis_pelanggaran.php" class="nav-link">Jenis Pelanggaran</a></li>
-                <li class="nav-item"><a href="laporan.php" class="nav-link">Cetak / Laporan</a></li>
-                <li class="text-muted small mt-3 mb-1 px-2 fw-bold text-uppercase">PELANGGARAN</li>
+
                 <li class="nav-item"><a href="catat_pelanggaran.php" class="nav-link">Catat Pelanggaran</a></li>
                 <li class="nav-item"><a href="tindakan.php" class="nav-link active">Tindakan</a></li>
                 <li class="nav-item"><a href="laporan.php" class="nav-link">Laporan</a></li>

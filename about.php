@@ -60,7 +60,8 @@ $role = strtolower(trim($_SESSION['role'] ?? 'guru'));
                     <!-- Kolom Kiri: Foto & Info Singkat -->
                     <div class="col-lg-4 mb-4">
                         <div class="profile-card shadow-sm text-center">
-                            <img src="https://via.placeholder.com/150" alt="Foto Profil" class="rounded-circle img-thumbnail mb-3" style="width: 140px; height: 140px; object-fit: cover;">
+                            <!-- Mengubah src placeholder menjadi file gambar lokal Anda -->
+                           <img src="images/images.jpg" alt="Foto Profil" class="rounded-circle img-thumbnail mb-3" style="width: 140px; height: 140px; object-fit: cover;">
                             <h5 class="fw-bold mb-1">Alfin Rahadian</h5>
                             <p class="text-muted mb-2">Web Developer</p>
                             <span class="badge bg-info text-dark text-uppercase"><?= htmlspecialchars($role) ?></span>

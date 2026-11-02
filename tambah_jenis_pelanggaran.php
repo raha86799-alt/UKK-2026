@@ -13,16 +13,17 @@ $db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
 
 if (isset($_POST['submit'])) {
     $nama_pelanggaran = trim($_POST['nama_pelanggaran'] ?? '');
-    $kategori         = trim($_POST['kategori'] ?? '');
+    $kategori         = trim($_POST['kategori'] ?? ''); // Bisa diubah jadi ID kategori jika form menggunakan select dropdown
     $poin             = (int)($_POST['poin'] ?? 0);
 
     if ($db_pdo && !empty($nama_pelanggaran)) {
         try {
-            $stmt = $db_pdo->prepare("INSERT INTO t_jenis_pelanggaran (nama_pelanggaran, kategori, poin, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())");
-            $insert = $stmt->execute([$nama_pelanggaran, $kategori, $poin]);
+            // Menyesuaikan dengan kolom asli di database: nama, poin, pelanggaran_kategori_id, kode, dll
+            $stmt = $db_pdo->prepare("INSERT INTO t_pelanggaran (nama, poin, pelanggaran_kategori_id, kode, status_aktif, created_at, updated_at) VALUES (?, ?, 1, 'P999', 1, NOW(), NOW())");
+            $insert = $stmt->execute([$nama_pelanggaran, $poin]);
 
             if ($insert) {
-                echo "<script>alert('Jenis pelanggaran berhasil ditambahkan!'); window.location='jenis_pelanggaran.php';</script>";
+                echo "<script>alert('Pelanggaran berhasil ditambahkan!'); window.location='jenis_pelanggaran.php';</script>";
                 exit;
             }
         } catch (Exception $e) {
