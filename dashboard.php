@@ -16,33 +16,39 @@ $labels = [
     'wali_kelas' => ['title' => 'Dashboard Wali Kelas', 'desc' => 'Pantau laporan, riwayat, dan rekap poin siswa di kelas.']
 ];
 
-$view =$labels[$role] ?? $labels['guru'];
+$view = $labels[$role] ?? $labels['guru'];
 
 // Menyesuaikan koneksi database PDO / MySQLi agar fleksibel membaca variabel dari config.php
-$db_connection =$pdo ?? $conn ?? $koneksi ?? null;
+$db_connection = $pdo ?? $conn ?? $koneksi ?? null;
 
 // Jika menggunakan koneksi mysqli standar tapi belum berupa objek, buat koneksi fallback
-if (!$db_connection && function_exists('mysqli_connect')) {$db_connection = @mysqli_connect("localhost", "root", "", "db_ukk_2026");
+if (!$db_connection && function_exists('mysqli_connect')) {
+    $db_connection = @mysqli_connect("localhost", "root", "", "db_ukk_2026");
 }
 
 $counts = ['Siswa' => 0, 'Guru' => 0, 'Kelas' => 0, 'Jenis Pelanggaran' => 0, 'Catatan' => 0];
 
-if ($db_connection) {$tables = [
-        't_siswa'             => 'Siswa',
-        't_guru'              => 'Guru',
-        't_kelas'             => 'Kelas',
-        't_pelanggaran'       => 'Jenis Pelanggaran',
+if ($db_connection) {
+    $tables = [
+        't_siswa'            => 'Siswa',
+        't_guru'             => 'Guru',
+        't_kelas'            => 'Kelas',
+        't_pelanggaran'      => 'Jenis Pelanggaran',
         't_pelanggaran_siswa' => 'Catatan'
     ];
     
-    foreach ($tables as $t =>$label) {
+    foreach ($tables as $t => $label) {
         try {
-            if ($db_connection instanceof PDO) {$counts[$label] = (int)$db_connection->query("SELECT COUNT(*) FROM `$t`")->fetchColumn();
+            if ($db_connection instanceof PDO) {
+                $counts[$label] = (int)$db_connection->query("SELECT COUNT(*) FROM `$t`")->fetchColumn();
             } else {
                 $result = mysqli_query($db_connection, "SELECT COUNT(*) as total FROM `$t`");
                 if ($result) {
                     $row = mysqli_fetch_assoc($result);
-                    $counts[$label] = (int)($row['total'] ?? 0); } } } catch (Throwable$e) {
+                    $counts[$label] = (int)($row['total'] ?? 0); 
+                } 
+            } 
+        } catch (Throwable $e) {
             $counts[$label] = 0;
         }
     }
@@ -69,6 +75,12 @@ if ($db_connection) {$tables = [
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             padding: 30px;
             flex-grow: 1;
+        }
+        /* Menyesuaikan warna menu aktif sidebar menjadi cyan/toska (#00bcd4) */
+        .nav-pills .nav-link.active {
+            background-color: #00bcd4 !important;
+            color: #ffffff !important;
+            font-weight: bold;
         }
     </style>
 </head>
