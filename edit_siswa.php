@@ -32,9 +32,9 @@ if (isset($_POST['submit'])) {
     $tanggal_lahir = trim($_POST['tanggal_lahir'] ?? '');
     $alamat        = trim($_POST['alamat'] ?? '');
 
-    // Validasi panjang karakter NIS dan NISN minimal 10 karakter
-    if (strlen($nis_input) < 10 || strlen($nisn) < 10) {
-        echo "<script>alert('Gagal: NIS dan NISN harus diisi minimal 10 karakter/angka!'); window.history.back();</script>";
+    // Validasi ketat: Kudu angka wungkul sarta panjangna kudu pas 10 digit (teu kurang, teu leuwih)
+    if (!preg_match('/^[0-9]{10}$/', $nis_input) || !preg_match('/^[0-9]{10}$/', $nisn)) {
+        echo "<script>alert('Gagal: NIS dan NISN harus berupa angka dan panjangnya harus tepat 10 digit!'); window.history.back();</script>";
         exit;
     }
 
@@ -121,13 +121,22 @@ if (!$siswa) {
                 <form action="" method="POST">
                     <div class="mb-3">
                         <label for="nis" class="form-label fw-bold">NIS</label>
-                        <input type="text" class="form-control" id="nis" name="nis" value="<?= htmlspecialchars($siswa['nis_val'] ?? '') ?>" placeholder="Minimal 10 karakter" minlength="10" autocomplete="off" required>
-                        <div class="form-text">NIS harus diisi minimal 10 karakter.</div>
+                        <!-- Input dibatasi angka doang, maksimal 10 digit, otomatis mupus huruf -->
+                        <input type="text" class="form-control" id="nis" name="nis" 
+                               value="<?= htmlspecialchars($siswa['nis_val'] ?? '') ?>" 
+                               maxlength="10" pattern="[0-9]{10}" inputmode="numeric" 
+                               oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);" 
+                               autocomplete="off" required>
+                        <div class="form-text">Wajib 10 digit angka.</div>
                     </div>
                     <div class="mb-3">
                         <label for="nisn" class="form-label fw-bold">NISN</label>
-                        <input type="text" class="form-control" id="nisn" name="nisn" value="<?= htmlspecialchars($siswa['nisn'] ?? '') ?>" placeholder="Minimal 10 karakter" minlength="10" autocomplete="off" required>
-                        <div class="form-text">NISN harus diisi minimal 10 karakter.</div>
+                        <input type="text" class="form-control" id="nisn" name="nisn" 
+                               value="<?= htmlspecialchars($siswa['nisn'] ?? '') ?>" 
+                               maxlength="10" pattern="[0-9]{10}" inputmode="numeric" 
+                               oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);" 
+                               autocomplete="off" required>
+                        <div class="form-text">Wajib 10 digit angka.</div>
                     </div>
                     <div class="mb-3">
                         <label for="nama" class="form-label fw-bold">Nama Siswa</label>

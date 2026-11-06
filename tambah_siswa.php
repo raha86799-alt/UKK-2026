@@ -12,17 +12,19 @@ $section = 'admin';
 
 $db_connection = $conn ?? $koneksi ?? mysqli_connect("localhost", "root", "", "db_ukk_2026");
 
+// Proses Tambah Siswa
 if (isset($_POST['submit'])) {
     $nis_input     = trim($_POST['nis'] ?? '');
     $nisn          = trim($_POST['nisn'] ?? '');
     $nama          = trim($_POST['nama'] ?? '');
     $jenis_kelamin = trim($_POST['jenis_kelamin'] ?? '');
     $tanggal_lahir = trim($_POST['tanggal_lahir'] ?? '');
+    $status_aktif  = trim($_POST['status_aktif'] ?? 1);
     $alamat        = trim($_POST['alamat'] ?? '');
 
-    // Validasi panjang karakter NIS dan NISN minimal 10 karakter
-    if (strlen($nis_input) < 10 || strlen($nisn) < 10) {
-        echo "<script>alert('Gagal: NIS dan NISN harus diisi minimal 10 karakter/angka!'); window.history.back();</script>";
+    // Validasi ketat: Kudu angka wungkul sarta panjangna kudu pas 10 karakter (teu kurang, teu leuwih)
+    if (!preg_match('/^[0-9]{10}$/', $nis_input) || !preg_match('/^[0-9]{10}$/', $nisn)) {
+        echo "<script>alert('Gagal: NIS dan NISN harus berupa angka dan panjangnya harus tepat 10 digit!'); window.history.back();</script>";
         exit;
     }
 
@@ -32,15 +34,15 @@ if (isset($_POST['submit'])) {
     $nama_esc          = mysqli_real_escape_string($db_connection, $nama);
     $jenis_kelamin_esc = mysqli_real_escape_string($db_connection, $jenis_kelamin);
     $tanggal_lahir_esc = mysqli_real_escape_string($db_connection, $tanggal_lahir);
+    $status_aktif_esc  = mysqli_real_escape_string($db_connection, $status_aktif);
     $alamat_esc        = mysqli_real_escape_string($db_connection, $alamat);
 
     // Cek apakah kolom di database menggunakan 'nis' atau 'nip'
     $check_column = mysqli_query($db_connection, "SHOW COLUMNS FROM t_siswa LIKE 'nis'");
     $kolom_nis = (mysqli_num_rows($check_column) > 0) ? 'nis' : 'nip';
 
-    // Query insert dinamis berdasarkan nama kolom yang ada di database
     $query_insert = "INSERT INTO t_siswa ($kolom_nis, nisn, nama, jenis_kelamin, tanggal_lahir, alamat, status_aktif, created_at, updated_at) 
-                     VALUES ('$nis_esc', '$nisn_esc', '$nama_esc', '$jenis_kelamin_esc', '$tanggal_lahir_esc', '$alamat_esc', 1, NOW(), NOW())";
+                     VALUES ('$nis_esc', '$nisn_esc', '$nama_esc', '$jenis_kelamin_esc', '$tanggal_lahir_esc', '$alamat_esc', '$status_aktif_esc', NOW(), NOW())";
     
     $insert = mysqli_query($db_connection, $query_insert);
     if ($insert) {
@@ -67,13 +69,9 @@ if (isset($_POST['submit'])) {
             background-color: #ffffff;
             border: 1px solid #e0e0e0;
             border-radius: 8px;
-            padding: 30px;
+            padding: 25px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        .nav-pills .nav-link.active {
-            background-color: #00bcd4 !important;
-            color: #ffffff !important;
-            font-weight: bold;
+            margin-bottom: 30px;
         }
     </style>
 </head>
@@ -85,47 +83,69 @@ if (isset($_POST['submit'])) {
         <!-- Memanggil Sidebar Terpusat -->
         <?php include "layout/sidebar.php"; ?>
 
-        <!-- KONTEN UTAMA FORM TAMBAH SISWA -->
+        <!-- KONTEN UTAMA TAMBAH SISWA -->
         <main class="col-md-9 col-lg-10 p-4">
-            <div class="content-card shadow-sm">
-                <div class="mb-3">
-                    <h2>Tambah Siswa</h2>
-                    <p class="text-muted mb-0">Formulir penambahan data siswa baru.</p>
-                </div>
-                <hr>
+            <h3 class="mb-4 fw-bold">Kelola Siswa</h3>
 
+            <!-- Form Tambah Data Siswa -->
+            <div class="content-card shadow-sm">
+                <h5 class="fw-bold mb-3">Tambah Data Siswa</h5>
                 <form action="" method="POST">
-                    <div class="mb-3">
-                        <label for="nis" class="form-label fw-bold">NIS</label>
-                        <input type="text" class="form-control" id="nis" name="nis" placeholder="Minimal 10 karakter" minlength="10" autocomplete="off" required>
-                        <div class="form-text">NIS harus diisi minimal 10 karakter.</div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="nis" class="form-label">NIS</label>
+                            <!-- Input dibatasi angka doang, max 10 karakter, sarta oninput pikeun nyegah leuwih ti 10 digit -->
+                            <input type="text" class="form-control" id="nis" name="nis" placeholder="Contoh: 0000000001" 
+                                   maxlength="10" pattern="[0-9]{10}" inputmode="numeric" 
+                                   oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);" 
+                                   autocomplete="off" required>
+                            <div class="form-text">Wajib 10 digit angka.</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="nisn" class="form-label">NISN</label>
+                            <input type="text" class="form-control" id="nisn" name="nisn" placeholder="Contoh: 0000000001" 
+                                   maxlength="10" pattern="[0-9]{10}" inputmode="numeric" 
+                                   oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);" 
+                                   autocomplete="off" required>
+                            <div class="form-text">Wajib 10 digit angka.</div>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="nisn" class="form-label fw-bold">NISN</label>
-                        <input type="text" class="form-control" id="nisn" name="nisn" placeholder="Minimal 10 karakter" minlength="10" autocomplete="off" required>
-                        <div class="form-text">NISN harus diisi minimal 10 karakter.</div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="nama" class="form-label">Nama Siswa</label>
+                            <input type="text" class="form-control" id="nama" name="nama" placeholder="" autocomplete="off" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="jenis_kelamin" class="form-label">Jenis Kelamin</label>
+                            <select class="form-select" id="jenis_kelamin" name="jenis_kelamin" required>
+                                <option value="">-- Pilih Jenis Kelamin --</option>
+                                <option value="L">Laki-laki</option>
+                                <option value="P">Perempuan</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="nama" class="form-label fw-bold">Nama Siswa</label>
-                        <input type="text" class="form-control" id="nama" name="nama" placeholder="Contoh: Alya Putri" autocomplete="off" required>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="tanggal_lahir" class="form-label">Tanggal Lahir</label>
+                            <input type="date" class="form-control" id="tanggal_lahir" name="tanggal_lahir" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="status_aktif" class="form-label">Status Aktif</label>
+                            <select class="form-select" id="status_aktif" name="status_aktif" required>
+                                <option value="1">Aktif</option>
+                                <option value="0">Tidak Aktif</option>
+                            </select>
+                        </div>
                     </div>
+
                     <div class="mb-3">
-                        <label for="jenis_kelamin" class="form-label fw-bold">Jenis Kelamin</label>
-                        <select class="form-select" id="jenis_kelamin" name="jenis_kelamin" required>
-                            <option value="">-- Pilih Jenis Kelamin --</option>
-                            <option value="L">Laki-laki (L)</option>
-                            <option value="P">Perempuan (P)</option>
-                        </select>
+                        <label for="alamat" class="form-label">Alamat</label>
+                        <textarea class="form-control" id="alamat" name="alamat" rows="2" required></textarea>
                     </div>
-                    <div class="mb-3">
-                        <label for="tanggal_lahir" class="form-label fw-bold">Tanggal Lahir</label>
-                        <input type="date" class="form-control" id="tanggal_lahir" name="tanggal_lahir" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="alamat" class="form-label fw-bold">Alamat</label>
-                        <textarea class="form-control" id="alamat" name="alamat" rows="3" placeholder="Contoh: Jl. Pendidikan No. 1" required></textarea>
-                    </div>
-                    <div class="mt-4">
+
+                    <div class="mt-3">
                         <button type="submit" name="submit" class="btn btn-warning fw-semibold px-4 text-dark">Simpan</button>
                         <a href="kelola_siswa.php" class="btn btn-secondary fw-semibold px-4 ms-2">Kembali</a>
                     </div>

@@ -13,41 +13,70 @@ $section = 'admin';
 $db_connection = $conn ?? $koneksi ?? mysqli_connect("localhost", "root", "", "db_ukk_2026");
 
 // Ambil ID dari URL
-$id = $_GET['id'] ?? null;
+$id = $_GET['id'] ?? 0;
 if (!$id) {
-    echo "<script>alert('ID guru tidak valid!'); window.location='kelola_guru.php';</script>";
+    echo "<script>alert('ID Guru tidak valid!'); window.location='kelola_guru.php';</script>";
     exit;
 }
 
+// Cek apakah kolom di tabel t_guru menggunakan 'nis' atau 'nip'
+$check_column = mysqli_query($db_connection, "SHOW COLUMNS FROM t_guru LIKE 'nis'");
+$kolom_nis = (mysqli_num_rows($check_column) > 0) ? 'nis' : 'nip';
+$label_nis = strtoupper($kolom_nis); // NIS atau NIP
+
+// Proses Update Guru
+if (isset($_POST['submit'])) {
+    $nis_input    = trim($_POST['nis'] ?? '');
+    $nama         = trim($_POST['nama'] ?? '');
+    $email        = trim($_POST['email'] ?? '');
+    $status_aktif = trim($_POST['status_aktif'] ?? 1);
+    
+    // Validasi ketat: Kudu angka wungkul sarta panjangna kudu pas 10 digit (teu kurang, teu leuwih)
+    if (!preg_match('/^[0-9]{10}$/', $nis_input)) {
+        echo "<script>alert('Gagal: {$label_nis} harus berupa angka dan panjangnya harus tepat 10 digit!'); window.history.back();</script>";
+        exit;
+    }
+
+    $nis_esc   = mysqli_real_escape_string($db_connection, $nis_input);
+    $nama_esc  = mysqli_real_escape_string($db_connection, $nama);
+    $email_esc = mysqli_real_escape_string($db_connection, $email);
+
+    // Ambil user_id guru ini terlebih dahulu untuk update tabel t_user juga jika email/password berubah
+    $query_get_guru = mysqli_query($db_connection, "SELECT user_id FROM t_guru WHERE id = '$id' LIMIT 1");
+    $data_guru = mysqli_fetch_assoc($query_get_guru);
+    $user_id = $data_guru['user_id'] ?? null;
+
+    // Update tabel t_guru
+    $query_update = "UPDATE t_guru SET 
+                        $kolom_nis = '$nis_esc', 
+                        nama = '$nama_esc', 
+                        email = '$email_esc', 
+                        status_aktif = '$status_aktif', 
+                        updated_at = NOW() 
+                     WHERE id = '$id'";
+    
+    $update = mysqli_query($db_connection, $query_update);
+    if ($update) {
+        // Jika relasi t_user ada, update juga email di t_user
+        if ($user_id) {
+            mysqli_query($db_connection, "UPDATE t_user SET email = '$email_esc', updated_at = NOW() WHERE id = '$user_id'");
+        }
+
+        echo "<script>alert('Data guru berhasil diperbarui!'); window.location='kelola_guru.php';</script>";
+        exit;
+    } else {
+        echo "<script>alert('Gagal memperbarui data guru: " . mysqli_error($db_connection) . "'); window.history.back();</script>";
+    }
+}
+
 // Ambil data guru yang akan diedit
-$query_get = "SELECT * FROM t_guru WHERE id = '$id'";
+$query_get = "SELECT *, $kolom_nis AS nis_val FROM t_guru WHERE id = '$id' LIMIT 1";
 $result_get = mysqli_query($db_connection, $query_get);
 $guru = mysqli_fetch_assoc($result_get);
 
 if (!$guru) {
     echo "<script>alert('Data guru tidak ditemukan!'); window.location='kelola_guru.php';</script>";
     exit;
-}
-
-// Proses update data
-if (isset($_POST['submit'])) {
-    $nip   = mysqli_real_escape_string($db_connection, $_POST['nip']);
-    $nama  = mysqli_real_escape_string($db_connection, $_POST['nama']);
-    $email = mysqli_real_escape_string($db_connection, $_POST['email']);
-
-    $query_update = "UPDATE t_guru SET 
-                        nip = '$nip', 
-                        nama = '$nama', 
-                        email = '$email', 
-                        updated_at = NOW() 
-                     WHERE id = '$id'";
-    
-    $update = mysqli_query($db_connection, $query_update);
-    if ($update) {
-        echo "<script>alert('Data guru berhasil diperbarui!'); window.location='kelola_guru.php';</script>";
-    } else {
-        echo "<script>alert('Gagal memperbarui data: " . mysqli_error($db_connection) . "');</script>";
-    }
 }
 ?>
 <!DOCTYPE html>
@@ -67,13 +96,29 @@ if (isset($_POST['submit'])) {
             background-color: #ffffff;
             border: 1px solid #e0e0e0;
             border-radius: 8px;
-            padding: 30px;
+            padding: 25px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
         }
-        .nav-pills .nav-link.active {
-            background-color: #00bcd4 !important;
-            color: #ffffff !important;
+        .form-table {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        .form-table td {
+            padding: 8px 6px;
+            vertical-align: middle;
+        }
+        .form-table td.label-col {
+            width: 15%;
             font-weight: bold;
+        }
+        .form-table td.colon-col {
+            width: 2%;
+            text-align: center;
+            font-weight: bold;
+        }
+        .form-table td.input-col {
+            width: 83%;
         }
     </style>
 </head>
@@ -85,29 +130,58 @@ if (isset($_POST['submit'])) {
         <!-- Memanggil Sidebar Terpusat -->
         <?php include "layout/sidebar.php"; ?>
 
-        <!-- KONTEN UTAMA FORM EDIT GURU -->
+        <!-- KONTEN UTAMA EDIT GURU -->
         <main class="col-md-9 col-lg-10 p-4">
-            <div class="content-card shadow-sm">
-                <div class="mb-3">
-                    <h2>Edit Guru</h2>
-                    <p class="text-muted mb-0">Formulir perubahan data guru terdaftar.</p>
-                </div>
-                <hr>
+            <h3 class="mb-4 fw-bold">Kelola Guru</h3>
 
+            <div class="content-card shadow-sm">
+                <h5 class="fw-bold mb-3">Edit Data Guru</h5>
                 <form action="" method="POST">
-                    <div class="mb-3">
-                        <label for="nip" class="form-label fw-bold">NIP</label>
-                        <input type="text" class="form-control" id="nip" name="nip" value="<?= htmlspecialchars($guru['nip'] ?? '') ?>" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="nama" class="form-label fw-bold">Nama Guru</label>
-                        <input type="text" class="form-control" id="nama" name="nama" value="<?= htmlspecialchars($guru['nama'] ?? '') ?>" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="email" class="form-label fw-bold">Email</label>
-                        <input type="email" class="form-control" id="email" name="email" value="<?= htmlspecialchars($guru['email'] ?? '') ?>" required>
-                    </div>
-                    <div class="mt-4">
+                    <table class="form-table">
+                        <tr>
+                            <td class="label-col"><?= $label_nis ?></td>
+                            <td class="colon-col">:</td>
+                            <td class="input-col">
+                                <!-- Input dibatasi angka doang, maksimal 10 digit, otomatis mupus huruf -->
+                                <input type="text" class="form-control" name="nis" 
+                                       value="<?= htmlspecialchars($guru['nis_val'] ?? '') ?>" 
+                                       maxlength="10" pattern="[0-9]{10}" inputmode="numeric" 
+                                       oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);" 
+                                       autocomplete="off" required>
+                                <div class="form-text">Wajib 10 digit angka.</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="label-col">Nama Guru</td>
+                            <td class="colon-col">:</td>
+                            <td class="input-col">
+                                <input type="text" class="form-control" name="nama" 
+                                       value="<?= htmlspecialchars($guru['nama'] ?? '') ?>" 
+                                       autocomplete="off" required>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="label-col">Email</td>
+                            <td class="colon-col">:</td>
+                            <td class="input-col">
+                                <input type="email" class="form-control" name="email" 
+                                       value="<?= htmlspecialchars($guru['email'] ?? '') ?>" 
+                                       autocomplete="off" required>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="label-col">Status Aktif</td>
+                            <td class="colon-col">:</td>
+                            <td class="input-col">
+                                <select class="form-select" name="status_aktif" required>
+                                    <option value="1" <?= (($guru['status_aktif'] ?? 1) == 1) ? 'selected' : '' ?>>Aktif</option>
+                                    <option value="0" <?= (($guru['status_aktif'] ?? 1) == 0) ? 'selected' : '' ?>>Tidak Aktif</option>
+                                </select>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <div class="mt-3">
                         <button type="submit" name="submit" class="btn btn-warning fw-semibold px-4 text-dark">Perbarui</button>
                         <a href="kelola_guru.php" class="btn btn-secondary fw-semibold px-4 ms-2">Kembali</a>
                     </div>
