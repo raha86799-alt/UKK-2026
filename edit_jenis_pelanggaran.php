@@ -18,8 +18,8 @@ if (!$id || !$db_pdo) {
     exit;
 }
 
-// Ambil data berdasarkan ID
-$stmt = $db_pdo->prepare("SELECT * FROM t_jenis_pelanggaran WHERE id = ?");
+// Ambil data berdasarkan ID untuk mendeteksi struktur kolom yang ada di database
+$stmt = $db_pdo->prepare("SELECT * FROM t_pelanggaran WHERE id = ?");
 $stmt->execute([$id]);
 $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -28,24 +28,68 @@ if (!$data) {
     exit;
 }
 
-// Proses update data
+// Proses update data secara dinamis berdasarkan kolom yang tersedia di tabel
 if (isset($_POST['update'])) {
-    $nama_pelanggaran = trim($_POST['nama_pelanggaran'] ?? '');
-    $kategori         = trim($_POST['kategori'] ?? '');
-    $poin             = (int)($_POST['poin'] ?? 0);
+    $nama_input     = trim($_POST['nama'] ?? '');
+    $kategori_input = trim($_POST['kategori'] ?? '');
+    $poin_input     = (int)($_POST['poin'] ?? 0);
 
-    try {
-        $updateStmt = $db_pdo->prepare("UPDATE t_jenis_pelanggaran SET nama_pelanggaran = ?, kategori = ?, poin = ?, updated_at = NOW() WHERE id = ?");
-        $update = $updateStmt->execute([$nama_pelanggaran, $kategori, $poin, $id]);
+    $updates = [];
+    $params  = [];
 
-        if ($update) {
-            echo "<script>alert('Jenis pelanggaran berhasil diperbarui!'); window.location='jenis_pelanggaran.php';</script>";
-            exit;
+    // Cek kolom Poin
+    if (array_key_exists('poin', $data)) {
+        $updates[] = "poin = ?";
+        $params[]  = $poin_input;
+    }
+
+    // Cek kolom Nama Pelanggaran (bisa 'nama' atau 'nama_pelanggaran')
+    if (array_key_exists('nama', $data)) {
+        $updates[] = "nama = ?";
+        $params[]  = $nama_input;
+    } elseif (array_key_exists('nama_pelanggaran', $data)) {
+        $updates[] = "nama_pelanggaran = ?";
+        $params[]  = $nama_input;
+    }
+
+    // Cek kolom Kategori (bisa 'kategori' atau 'kategori_id')
+    if (array_key_exists('kategori', $data)) {
+        $updates[] = "kategori = ?";
+        $params[]  = $kategori_input;
+    } elseif (array_key_exists('kategori_id', $data)) {
+        $updates[] = "kategori_id = ?";
+        $params[]  = $kategori_input;
+    }
+
+    // Cek kolom updated_at jika ada
+    if (array_key_exists('updated_at', $data)) {
+        $updates[] = "updated_at = NOW()";
+    }
+
+    if (!empty($updates)) {
+        try {
+            $sql = "UPDATE t_pelanggaran SET " . implode(", ", $updates) . " WHERE id = ?";
+            $params[] = $id;
+
+            $updateStmt = $db_pdo->prepare($sql);
+            $update = $updateStmt->execute($params);
+
+            if ($update) {
+                echo "<script>alert('Jenis pelanggaran berhasil diperbarui!'); window.location='jenis_pelanggaran.php';</script>";
+                exit;
+            }
+        } catch (Exception $e) {
+            echo "<script>alert('Gagal memperbarui data: " . addslashes($e->getMessage()) . "');</script>";
         }
-    } catch (Exception $e) {
-        echo "<script>alert('Gagal memperbarui data: " . addslashes($e->getMessage()) . "');</script>";
+    } else {
+        echo "<script>alert('Tidak ada kolom yang cocok untuk diperbarui.');</script>";
     }
 }
+
+// Menentukan nilai awal untuk form berdasarkan kolom yang tersedia
+$val_nama = $data['nama'] ?? ($data['nama_pelanggaran'] ?? '');
+$val_kat  = $data['kategori'] ?? ($data['kategori_id'] ?? '');
+$val_poin = $data['poin'] ?? 0;
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -93,18 +137,18 @@ if (isset($_POST['update'])) {
 
                 <form action="" method="POST">
                     <div class="mb-3">
-                        <label for="nama_pelanggaran" class="form-label fw-bold">Nama Pelanggaran</label>
-                        <input type="text" class="form-control" id="nama_pelanggaran" name="nama_pelanggaran" value="<?= htmlspecialchars($data['nama_pelanggaran'] ?? '') ?>" required>
+                        <label for="nama" class="form-label fw-bold">Nama Pelanggaran</label>
+                        <input type="text" class="form-control" id="nama" name="nama" value="<?= htmlspecialchars($val_nama) ?>" required>
                     </div>
 
                     <div class="mb-3">
                         <label for="kategori" class="form-label fw-bold">Kategori</label>
-                        <input type="text" class="form-control" id="kategori" name="kategori" value="<?= htmlspecialchars($data['kategori'] ?? '') ?>" required>
+                        <input type="text" class="form-control" id="kategori" name="kategori" value="<?= htmlspecialchars($val_kat) ?>" required>
                     </div>
 
                     <div class="mb-3">
                         <label for="poin" class="form-label fw-bold">Jumlah Poin</label>
-                        <input type="number" class="form-control" id="poin" name="poin" value="<?= (int)($data['poin'] ?? 0) ?>" required>
+                        <input type="number" class="form-control" id="poin" name="poin" value="<?= (int)$val_poin ?>" required>
                     </div>
 
                     <div class="mt-4">

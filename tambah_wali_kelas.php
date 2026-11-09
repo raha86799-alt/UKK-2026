@@ -21,8 +21,6 @@ if (isset($_POST['submit'])) {
 
     if ($db_pdo) {
         try {
-            // Menyesuaikan kolom dengan struktur tabel jika ada tanggal_mulai/selesai, 
-            // jika kolom di database belum ada, sesuaikan kembali dengan tabel t_wali_kelas Anda.
             $stmt = $db_pdo->prepare("INSERT INTO t_wali_kelas (guru_id, kelas_id, tahun_ajaran_id, status_aktif, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())");
             $insert = $stmt->execute([$guru_id, $kelas_id, $tahun_ajaran_id, $status_aktif]);
 
@@ -65,7 +63,7 @@ if (isset($_POST['submit'])) {
             vertical-align: middle;
         }
         .form-table td.label-col {
-            width: 18lerde%;
+            width: 18%;
             font-weight: normal;
         }
         .form-table td.colon-col {
@@ -117,7 +115,12 @@ if (isset($_POST['submit'])) {
                                     <option value="">-- Pilih Kelas --</option>
                                     <?php
                                     if ($db_pdo) {
-                                        $kelasList = $db_pdo->query("SELECT id, nama FROM t_kelas ORDER BY nama ASC")->fetchAll(PDO::FETCH_ASSOC);
+                                        // Query ini otomatis menyaring agar kelas yang sudah memiliki wali kelas tidak muncul lagi
+                                        $kelasList = $db_pdo->query("
+                                            SELECT id, nama FROM t_kelas 
+                                            WHERE id NOT IN (SELECT kelas_id FROM t_wali_kelas) 
+                                            ORDER BY nama ASC
+                                        ")->fetchAll(PDO::FETCH_ASSOC);
                                         foreach ($kelasList as $k) {
                                             echo "<option value='{$k['id']}'>{$k['nama']}</option>";
                                         }
@@ -134,9 +137,9 @@ if (isset($_POST['submit'])) {
                                     <option value="">-- Pilih Guru --</option>
                                     <?php
                                     if ($db_pdo) {
-                                        $guruList = $db_pdo->query("SELECT id, nis, nama FROM t_guru ORDER BY nama ASC")->fetchAll(PDO::FETCH_ASSOC);
+                                        $guruList = $db_pdo->query("SELECT id, nama FROM t_guru ORDER BY nama ASC")->fetchAll(PDO::FETCH_ASSOC);
                                         foreach ($guruList as $g) {
-                                            echo "<option value='{$g['id']}'>{$g['nama']} ({$g['nis']})</option>";
+                                            echo "<option value='{$g['id']}'>{$g['nama']}</option>";
                                         }
                                     }
                                     ?>
@@ -170,8 +173,8 @@ if (isset($_POST['submit'])) {
                     </table>
 
                     <div class="mt-3">
-                        <button type="submit" name="submit" class="btn btn-primary px-3 py-1">Simpan</button>
-                        <a href="kelola_wali_kelas.php" class="text-decoration-none ms-2 text-primary">Batal</a>
+                        <button type="submit" name="submit" class="btn text-dark px-4 py-2 fw-semibold" style="background-color: #ffc107; border-color: #ffc107;">Simpan</button>
+                        <a href="kelola_wali_kelas.php" class="btn text-white px-4 py-2 ms-2 text-decoration-none" style="background-color: #6c757d; border-color: #6c757d;">Kembali</a>
                     </div>
                 </form>
             </div>
