@@ -43,7 +43,9 @@ $tahun_list = [];
 
 if ($db_pdo) {
     try {
-        $siswa_list = $db_pdo->query("SELECT id, nama FROM t_siswa WHERE status_aktif = 1 ORDER BY nama ASC")->fetchAll(PDO::FETCH_ASSOC);
+        // Tambahkan filter NOT IN untuk mengecualikan siswa yang sudah ditempatkan
+        $siswa_list = $db_pdo->query("SELECT id, nama FROM t_siswa WHERE status_aktif = 1 AND id NOT IN (SELECT siswa_id FROM t_kelas_siswa) ORDER BY nama ASC")->fetchAll(PDO::FETCH_ASSOC);
+        
         $kelas_list = $db_pdo->query("SELECT id, nama FROM t_kelas WHERE status_aktif = 1 ORDER BY nama ASC")->fetchAll(PDO::FETCH_ASSOC);
         $tahun_list = $db_pdo->query("SELECT id, nama FROM t_tahun_ajaran ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
     } catch (Exception $e) {

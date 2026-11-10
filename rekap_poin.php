@@ -3,7 +3,7 @@ session_start();
 require_once 'auth.php'; 
 require_once 'config.php'; 
 
-$title = 'Rekap Poin Siswa';
+$title = 'Rekap Poin & Akumulasi Pelanggaran Siswa';
 $db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
 ?>
 <!DOCTYPE html>
@@ -29,8 +29,8 @@ $db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
         <main class="col-md-9 col-lg-10 p-4">
             <div class="content-card shadow-sm">
                 <div class="mb-3">
-                    <h2>Rekap Poin & Akumulasi Pelanggaran Siswa</h2>
-                    <p class="text-muted mb-0">Ringkasan total frekuensi pelanggaran untuk setiap siswa.</p>
+                    <h2><?= htmlspecialchars($title) ?></h2>
+                    <p class="text-muted mb-0">Ringkasan total frekuensi, kelas, dan akumulasi poin pelanggaran untuk setiap siswa.</p>
                 </div>
                 <hr>
 
@@ -41,7 +41,9 @@ $db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
                                 <th width="5%">No</th>
                                 <th>NISN</th>
                                 <th>Nama Siswa</th>
+                                <th>Kelas</th>
                                 <th class="text-center">Total Pelanggaran</th>
+                                <th class="text-center">Total Poin</th>
                                 <th class="text-center">Status Poin / Tindakan</th>
                             </tr>
                         </thead>
@@ -49,40 +51,54 @@ $db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
                             <?php
                             if ($db_pdo) {
                                 try {
-                                    $sql = "SELECT s.id, s.nisn, s.nama, COUNT(ps.id) AS total_pelanggaran 
+                                    // Query dengan tambahan JOIN ke tabel kelas & kelas_siswa
+                                    $sql = "SELECT s.id, s.nisn, s.nama, 
+                                                   COALESCE(k.nama, '-') AS nama_kelas,
+                                                   COUNT(ps.id) AS total_pelanggaran, 
+                                                   COALESCE(SUM(p.poin), 0) AS total_poin 
                                             FROM t_siswa s 
+                                            LEFT JOIN t_kelas_siswa ks ON ks.siswa_id = s.id AND ks.status_aktif = 1
+                                            LEFT JOIN t_kelas k ON k.id = ks.kelas_id
                                             LEFT JOIN t_pelanggaran_siswa ps ON ps.siswa_id = s.id 
+                                            LEFT JOIN t_pelanggaran p ON p.id = ps.pelanggaran_id 
                                             WHERE s.status_aktif = 1 
-                                            GROUP BY s.id, s.nisn, s.nama 
-                                            ORDER BY total_pelanggaran DESC";
+                                            GROUP BY s.id, s.nisn, s.nama, k.nama 
+                                            ORDER BY total_poin DESC, total_pelanggaran DESC";
+                                            
                                     $rows = $db_pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 
                                     if (count($rows) > 0) {
                                         foreach ($rows as $i => $r) {
-                                            $total = (int)$r['total_pelanggaran'];
-                                            // Menentukan status berdasarkan jumlah pelanggaran
-                                            if ($total == 0) {
-                                                $badge = '<span class="badge bg-success">Aman / Disiplin</span>';
-                                            } elseif ($total <= 2) {
-                                                $badge = '<span class="badge bg-warning text-dark">Peringatan Ringan</span>';
+                                            $total_pelanggaran = (int)$r['total_pelanggaran'];
+                                            $total_poin = (int)$r['total_poin'];
+
+                                            if ($total_poin == 0) {
+                                                $badge_status = '<span class="badge bg-success">Aman / Disiplin</span>';
+                                                $badge_poin = '<span class="badge bg-success">0 Poin</span>';
+                                            } elseif ($total_poin < 15) {
+                                                $badge_status = '<span class="badge bg-warning text-dark">Peringatan Ringan</span>';
+                                                $badge_poin = '<span class="badge bg-danger">'.$total_poin.' Poin</span>';
                                             } else {
-                                                $badge = '<span class="badge bg-danger">Perlu Perhatian Khusus</span>';
+                                                $badge_status = '<span class="badge bg-danger">Perlu Perhatian Khusus</span>';
+                                                $badge_poin = '<span class="badge bg-danger">'.$total_poin.' Poin</span>';
                                             }
                                             ?>
                                             <tr>
                                                 <td><?= $i + 1 ?></td>
                                                 <td><?= htmlspecialchars($r['nisn'] ?? '-') ?></td>
                                                 <td><?= htmlspecialchars($r['nama']) ?></td>
-                                                <td class="text-center fw-bold fs-5"><?= $total ?></td>
-                                                <td class="text-center"><?= $badge ?></td>
+                                                <td><?= htmlspecialchars($r['nama_kelas']) ?></td>
+                                                <td class="text-center"><?= $total_pelanggaran ?></td>
+                                                <td class="text-center"><?= $badge_poin ?></td>
+                                                <td class="text-center"><?= $badge_status ?></td>
                                             </tr>
                                             <?php
                                         }
                                     } else {
-                                        echo '<tr><td colspan="5" class="text-center text-muted py-4">Belum ada data siswa.</td></tr>';
+                                        echo '<tr><td colspan="7" class="text-center text-muted py-4">Belum ada data siswa.</td></tr>';
                                     }
                                 } catch (Exception $e) {
-                                    echo '<tr><td colspan="5" class="text-center text-danger py-4">Error memuat rekap: ' . htmlspecialchars($e->getMessage()) . '</td></tr>';
+                                    echo '<tr><td colspan="7" class="text-center text-danger py-4">Error memuat rekap: ' . htmlspecialchars($e->getMessage()) . '</td></tr>';
                                 }
                             }
                             ?>
