@@ -9,30 +9,43 @@ if (function_exists('requireRole')) {
 
 $title = 'Tambah Wali Kelas';
 $section = 'admin';
-$db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
 
+$db_connection = $conn ?? $koneksi ?? mysqli_connect("localhost", "root", "", "db_ukk_2026");
+
+// Proses Simpan Data Wali Kelas
 if (isset($_POST['submit'])) {
-    $tahun_ajaran_id = $_POST['tahun_ajaran_id'];
-    $kelas_id        = $_POST['kelas_id'];
-    $guru_id         = $_POST['guru_id'];
-    $tanggal_mulai   = $_POST['tanggal_mulai'] ?? null;
-    $tanggal_selesai = $_POST['tanggal_selesai'] ?? null;
-    $status_aktif    = $_POST['status_aktif'] ?? 1;
+    $tahun_ajaran_id = trim($_POST['tahun_ajaran_id'] ?? '');
+    $kelas_id        = trim($_POST['kelas_id'] ?? '');
+    $guru_id         = trim($_POST['guru_id'] ?? '');
+    $tanggal_mulai   = trim($_POST['tanggal_mulai'] ?? '');
+    $tanggal_selesai = trim($_POST['tanggal_selesai'] ?? '');
+    $status_aktif    = trim($_POST['status_aktif'] ?? 1);
 
-    if ($db_pdo) {
-        try {
-            $stmt = $db_pdo->prepare("INSERT INTO t_wali_kelas (guru_id, kelas_id, tahun_ajaran_id, status_aktif, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())");
-            $insert = $stmt->execute([$guru_id, $kelas_id, $tahun_ajaran_id, $status_aktif]);
+    if (empty($tahun_ajaran_id) || empty($kelas_id) || empty($guru_id) || empty($tanggal_mulai) || empty($tanggal_selesai)) {
+        echo "<script>alert('Semua field wajib diisi!'); window.history.back();</script>";
+        exit;
+    }
 
-            if ($insert) {
-                echo "<script>alert('Data wali kelas berhasil ditambahkan!'); window.location='kelola_wali_kelas.php';</script>";
-                exit;
-            }
-        } catch (Exception $e) {
-            echo "<script>alert('Gagal menyimpan data: " . $e->getMessage() . "');</script>";
-        }
+    $query_insert = "INSERT INTO t_wali_kelas (tahun_ajaran_id, kelas_id, guru_id, tanggal_mulai, tanggal_selesai, status_aktif, created_at, updated_at) 
+                     VALUES ('$tahun_ajaran_id', '$kelas_id', '$guru_id', '$tanggal_mulai', '$tanggal_selesai', '$status_aktif', NOW(), NOW())";
+    
+    $insert = mysqli_query($db_connection, $query_insert);
+    if ($insert) {
+        echo "<script>alert('Data wali kelas berhasil ditambahkan!'); window.location='kelola_wali_kelas.php';</script>";
+        exit;
+    } else {
+        echo "<script>alert('Gagal menambah data: " . mysqli_error($db_connection) . "'); window.history.back();</script>";
     }
 }
+
+// Ambil data untuk Dropdown Tahun Ajaran
+$query_tahun = mysqli_query($db_connection, "SELECT * FROM t_tahun_ajaran ORDER BY nama DESC");
+
+// Ambil data untuk Dropdown Kelas
+$query_kelas = mysqli_query($db_connection, "SELECT * FROM t_kelas ORDER BY tingkat ASC, nama ASC");
+
+// Ambil data untuk Dropdown Guru
+$query_guru = mysqli_query($db_connection, "SELECT * FROM t_guru ORDER BY nama ASC");
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -50,25 +63,27 @@ if (isset($_POST['submit'])) {
         .content-card {
             background-color: #ffffff;
             border: 1px solid #e0e0e0;
-            border-radius: 4px;
-            padding: 25px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
         }
         .form-table {
             width: 100%;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         .form-table td {
-            padding: 10px 8px;
+            padding: 10px 6px;
             vertical-align: middle;
         }
         .form-table td.label-col {
             width: 18%;
-            font-weight: normal;
+            font-weight: 600;
         }
         .form-table td.colon-col {
             width: 2%;
             text-align: center;
+            font-weight: bold;
         }
         .form-table td.input-col {
             width: 80%;
@@ -83,88 +98,81 @@ if (isset($_POST['submit'])) {
         <!-- Memanggil Sidebar Terpusat -->
         <?php include "layout/sidebar.php"; ?>
 
-        <!-- KONTEN UTAMA FORM TAMBAH WALI KELAS -->
+        <!-- KONTEN UTAMA -->
         <main class="col-md-9 col-lg-10 p-4">
-            <div class="content-card">
-                <h4 class="mb-4"><?= htmlspecialchars($title) ?></h4>
+            <h3 class="mb-4 fw-bold">Kelola Wali Kelas</h3>
 
+            <div class="content-card shadow-sm">
+                <h5 class="fw-bold mb-3">Tambah Wali Kelas</h5>
+                
                 <form action="" method="POST">
                     <table class="form-table">
+                        <!-- Tahun Ajaran -->
                         <tr>
                             <td class="label-col">Tahun Ajaran</td>
                             <td class="colon-col">:</td>
                             <td class="input-col">
-                                <select class="form-select" id="tahun_ajaran_id" name="tahun_ajaran_id" required>
+                                <select class="form-select" name="tahun_ajaran_id" required>
                                     <option value="">-- Pilih Tahun Ajaran --</option>
-                                    <?php
-                                    if ($db_pdo) {
-                                        $tahunList = $db_pdo->query("SELECT id, nama FROM t_tahun_ajaran ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
-                                        foreach ($tahunList as $ta) {
-                                            echo "<option value='{$ta['id']}'>{$ta['nama']}</option>";
-                                        }
-                                    }
-                                    ?>
+                                    <?php while ($t = mysqli_fetch_assoc($query_tahun)) { ?>
+                                        <option value="<?= $t['id'] ?>"><?= htmlspecialchars($t['nama']) ?></option>
+                                    <?php } ?>
                                 </select>
                             </td>
                         </tr>
+
+                        <!-- Kelas -->
                         <tr>
                             <td class="label-col">Kelas</td>
                             <td class="colon-col">:</td>
                             <td class="input-col">
-                                <select class="form-select" id="kelas_id" name="kelas_id" required>
+                                <select class="form-select" name="kelas_id" required>
                                     <option value="">-- Pilih Kelas --</option>
-                                    <?php
-                                    if ($db_pdo) {
-                                        // Query ini otomatis menyaring agar kelas yang sudah memiliki wali kelas tidak muncul lagi
-                                        $kelasList = $db_pdo->query("
-                                            SELECT id, nama FROM t_kelas 
-                                            WHERE id NOT IN (SELECT kelas_id FROM t_wali_kelas) 
-                                            ORDER BY nama ASC
-                                        ")->fetchAll(PDO::FETCH_ASSOC);
-                                        foreach ($kelasList as $k) {
-                                            echo "<option value='{$k['id']}'>{$k['nama']}</option>";
-                                        }
-                                    }
-                                    ?>
+                                    <?php while ($k = mysqli_fetch_assoc($query_kelas)) { ?>
+                                        <option value="<?= $k['id'] ?>"><?= htmlspecialchars($k['nama']) ?></option>
+                                    <?php } ?>
                                 </select>
                             </td>
                         </tr>
+
+                        <!-- Guru Wali Kelas -->
                         <tr>
                             <td class="label-col">Guru Wali Kelas</td>
                             <td class="colon-col">:</td>
                             <td class="input-col">
-                                <select class="form-select" id="guru_id" name="guru_id" required>
+                                <select class="form-select" name="guru_id" required>
                                     <option value="">-- Pilih Guru --</option>
-                                    <?php
-                                    if ($db_pdo) {
-                                        $guruList = $db_pdo->query("SELECT id, nama FROM t_guru ORDER BY nama ASC")->fetchAll(PDO::FETCH_ASSOC);
-                                        foreach ($guruList as $g) {
-                                            echo "<option value='{$g['id']}'>{$g['nama']}</option>";
-                                        }
-                                    }
-                                    ?>
+                                    <?php while ($g = mysqli_fetch_assoc($query_guru)) { ?>
+                                        <option value="<?= $g['id'] ?>"><?= htmlspecialchars($g['nama']) ?></option>
+                                    <?php } ?>
                                 </select>
                             </td>
                         </tr>
+
+                        <!-- Tanggal Mulai -->
                         <tr>
                             <td class="label-col">Tanggal Mulai</td>
                             <td class="colon-col">:</td>
                             <td class="input-col">
-                                <input type="date" class="form-control" name="tanggal_mulai">
+                                <input type="date" class="form-control" name="tanggal_mulai" required>
                             </td>
                         </tr>
+
+                        <!-- Tanggal Selesai -->
                         <tr>
                             <td class="label-col">Tanggal Selesai</td>
                             <td class="colon-col">:</td>
                             <td class="input-col">
-                                <input type="date" class="form-control" name="tanggal_selesai">
+                                <input type="date" class="form-control" name="tanggal_selesai" required>
                             </td>
                         </tr>
+
+                        <!-- Status -->
                         <tr>
                             <td class="label-col">Status</td>
                             <td class="colon-col">:</td>
                             <td class="input-col">
-                                <select class="form-select" id="status_aktif" name="status_aktif" required>
+                                <select class="form-select" name="status_aktif" required>
                                     <option value="1">Aktif</option>
                                     <option value="0">Tidak Aktif</option>
                                 </select>
@@ -172,9 +180,9 @@ if (isset($_POST['submit'])) {
                         </tr>
                     </table>
 
-                    <div class="mt-3">
-                        <button type="submit" name="submit" class="btn text-dark px-4 py-2 fw-semibold" style="background-color: #ffc107; border-color: #ffc107;">Simpan</button>
-                        <a href="kelola_wali_kelas.php" class="btn text-white px-4 py-2 ms-2 text-decoration-none" style="background-color: #6c757d; border-color: #6c757d;">Kembali</a>
+                    <div class="mt-4">
+                        <button type="submit" name="submit" class="btn btn-warning fw-semibold px-4 text-dark">Simpan</button>
+                        <a href="kelola_wali_kelas.php" class="btn btn-secondary fw-semibold px-4 ms-2">Kembali</a>
                     </div>
                 </form>
             </div>

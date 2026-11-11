@@ -3,7 +3,15 @@ session_start();
 require_once 'auth.php'; 
 require_once 'config.php'; 
 
-$title = 'Rekap Poin Siswa';
+// Mengizinkan Admin mengakses halaman ini
+if (function_exists('requireRole')) {
+    requireRole(['admin', 'guru', 'wali_kelas']);
+}
+
+$title = 'Laporan'; 
+$section = 'admin';
+
+// Koneksi database (PDO compatible)
 $db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
 ?>
 <!DOCTYPE html>
@@ -53,9 +61,7 @@ $db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
                         <h2><?= htmlspecialchars($title) ?></h2>
                         <p class="text-muted mb-0">Daftar laporan pelanggaran siswa terdaftar pada sistem.</p>
                     </div>
-                    <div>
-                        <a href="cetak_export.php" target="_blank" class="btn btn-primary btn-sm fw-semibold">Cetak / Export</a>
-                    </div>
+                    <a href="#" onclick="window.print();" class="btn btn-primary btn-sm fw-semibold">Cetak / Export</a>
                 </div>
                 <hr>
 
@@ -76,13 +82,17 @@ $db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
                             <?php
                             if ($db_pdo) {
                                 try {
-                                    $stmt = $db_pdo->query("
-                                        SELECT tanggal, nama_siswa, nama_kelas, nama_pelanggaran, poin, nama_guru 
-                                        FROM t_pelanggaran_siswa 
-                                        ORDER BY tanggal DESC, id DESC 
-                                        LIMIT 100
-                                    ");
-                                    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                                    // Query mengambil data laporan pelanggaran siswa
+                                    $sql = "SELECT ps.*, s.nama AS nama_siswa, k.nama AS nama_kelas, p.nama AS nama_pelanggaran, p.poin, g.nama AS nama_guru 
+                                            FROM t_pelanggaran_siswa ps
+                                            LEFT JOIN t_siswa s ON ps.siswa_id = s.id
+                                            LEFT JOIN t_kelas_siswa ks ON s.id = ks.siswa_id AND ks.status_aktif = 1
+                                            LEFT JOIN t_kelas k ON ks.kelas_id = k.id
+                                            LEFT JOIN t_pelanggaran p ON ps.pelanggaran_id = p.id
+                                            LEFT JOIN t_guru g ON ps.guru_id = g.id
+                                            ORDER BY ps.tanggal DESC, ps.id DESC";
+                                            
+                                    $rows = $db_pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 
                                     if (count($rows) > 0) {
                                         foreach ($rows as $i => $r) {
@@ -91,18 +101,18 @@ $db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
                                                 <td><?= $i + 1 ?></td>
                                                 <td><?= htmlspecialchars($r['tanggal']) ?></td>
                                                 <td><?= htmlspecialchars($r['nama_siswa']) ?></td>
-                                                <td><?= htmlspecialchars($r['nama_kelas']) ?></td>
+                                                <td><?= htmlspecialchars($r['nama_kelas'] ?? '-') ?></td>
                                                 <td><?= htmlspecialchars($r['nama_pelanggaran']) ?></td>
-                                                <td><span class="badge bg-danger"><?= (int)$r['poin'] ?> Poin</span></td>
+                                                <td><span class="badge bg-danger"><?= htmlspecialchars($r['poin']) ?> Poin</span></td>
                                                 <td><?= htmlspecialchars($r['nama_guru']) ?></td>
                                             </tr>
                                             <?php
                                         }
                                     } else {
-                                        echo '<tr><td colspan="7" class="text-center text-muted py-4">Belum ada data laporan pelanggaran.</td></tr>';
+                                        echo '<tr><td colspan="7" class="text-center text-muted py-4">Belum ada data laporan pelanggaran siswa.</td></tr>';
                                     }
                                 } catch (Exception $e) {
-                                    echo '<tr><td colspan="7" class="text-center text-danger py-4">Error memuat data: ' . $e->getMessage() . '</td></tr>';
+                                    echo '<tr><td colspan="7" class="text-center text-danger py-4">Error memuat data: ' . htmlspecialchars($e->getMessage()) . '</td></tr>';
                                 }
                             } else {
                                 echo '<tr><td colspan="7" class="text-center text-danger py-4">Koneksi database belum terhubung dengan benar.</td></tr>';

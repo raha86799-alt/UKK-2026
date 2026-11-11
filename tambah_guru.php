@@ -168,7 +168,7 @@ if (isset($_POST['submit'])) {
 
                     <div class="mt-3">
                         <button type="submit" name="submit" class="btn btn-warning fw-semibold px-4 text-dark">Simpan</button>
-                        <a href="dashboard.php" class="btn btn-secondary fw-semibold px-4 ms-2">Kembali</a>
+                        <a href="kelola_guru.php" class="btn btn-secondary fw-semibold px-4 ms-2">Kembali</a>
                     </div>
                 </form>
             </div>

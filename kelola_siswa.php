@@ -3,20 +3,16 @@ session_start();
 require_once 'auth.php'; 
 require_once 'config.php'; 
 
-// Mengizinkan Admin dan Guru mengakses halaman ini
+// Mengizinkan Admin mengakses halaman ini
 if (function_exists('requireRole')) {
-    requireRole(['admin', 'guru']);
+    requireRole(['admin']);
 }
 
 $title = 'Kelola Siswa'; 
 $section = 'admin';
 
-// Koneksi database
-$db_connection = $conn ?? $koneksi ?? @mysqli_connect("localhost", "root", "", "db_ukk_2026");
-
-// Ambil data dari tabel t_siswa
-$query = "SELECT * FROM t_siswa";
-$result = $db_connection ? @mysqli_query($db_connection, $query) : false;
+// Koneksi database (PDO compatible)
+$db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -54,7 +50,7 @@ $result = $db_connection ? @mysqli_query($db_connection, $query) : false;
 <div class="container-fluid d-flex p-0" style="min-height: 100vh;">
     <div class="row flex-grow-1 g-0 w-100">
 
-        <!-- Sidebar dipanggil di sini -->
+        <!-- Memanggil Sidebar Terpusat -->
         <?php include "layout/sidebar.php"; ?>
 
         <!-- KONTEN UTAMA -->
@@ -62,7 +58,7 @@ $result = $db_connection ? @mysqli_query($db_connection, $query) : false;
             <div class="content-card shadow-sm">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
-                        <h2>Kelola Siswa</h2>
+                        <h2><?= htmlspecialchars($title) ?></h2>
                         <p class="text-muted mb-0">Kelola data siswa terdaftar pada sistem.</p>
                     </div>
                     <a href="tambah_siswa.php" class="btn btn-primary btn-sm fw-semibold">+ Tambah Siswa</a>
@@ -74,8 +70,8 @@ $result = $db_connection ? @mysqli_query($db_connection, $query) : false;
                         <thead class="table-light">
                             <tr>
                                 <th width="5%">No</th>
-                                <th>NIS</th> <!-- Diubah dari NIP menjadi NIS -->
-                                <th>NISN</th>
+                                <th>NIS</th>
+                                <th>Kelas</th>
                                 <th>Nama</th>
                                 <th>Jenis Kelamin</th>
                                 <th>Tanggal Lahir</th>
@@ -84,32 +80,44 @@ $result = $db_connection ? @mysqli_query($db_connection, $query) : false;
                             </tr>
                         </thead>
                         <tbody>
-                            <?php 
-                            $no = 1;
-                            if ($result && mysqli_num_rows($result) > 0) {
-                                while ($row = mysqli_fetch_assoc($result)) {
-                                    ?>
-                                    <tr>
-                                        <td><?= $no++ ?></td>
-                                        <td><?= htmlspecialchars($row['nis'] ?? $row['nip'] ?? '-') ?></td> <!-- Diubah memanggil kolom nis -->
-                                        <td><?= htmlspecialchars($row['nisn'] ?? '-') ?></td>
-                                        <td><?= htmlspecialchars($row['nama'] ?? '-') ?></td>
-                                        <td><?= htmlspecialchars($row['jenis_kelamin'] ?? '-') ?></td>
-                                        <td><?= htmlspecialchars($row['tanggal_lahir'] ?? '-') ?></td>
-                                        <td><?= htmlspecialchars($row['alamat'] ?? '-') ?></td>
-                                        <td class="text-center">
-                                            <a href="edit_siswa.php?id=<?= $row['id'] ?>" class="btn btn-warning btn-sm text-dark px-2 fw-semibold">Ubah</a> 
-                                            <a href="hapus_siswa.php?id=<?= $row['id'] ?>" class="btn btn-danger btn-sm text-white px-2 fw-semibold" onclick="return confirm('Yakin ingin menghapus data ini?')">Hapus</a>
-                                        </td>
-                                    </tr>
-                                    <?php 
+                            <?php
+                            if ($db_pdo) {
+                                try {
+                                    // Query dengan JOIN ke t_kelas_siswa dan t_kelas agar nama kelas muncul
+                                    $sql = "SELECT s.*, k.nama AS nama_kelas 
+                                            FROM t_siswa s 
+                                            LEFT JOIN t_kelas_siswa ks ON s.id = ks.siswa_id AND ks.status_aktif = 1
+                                            LEFT JOIN t_kelas k ON ks.kelas_id = k.id
+                                            ORDER BY s.id ASC";
+                                            
+                                    $rows = $db_pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+
+                                    if (count($rows) > 0) {
+                                        foreach ($rows as $i => $r) {
+                                            ?>
+                                            <tr>
+                                                <td><?= $i + 1 ?></td>
+                                                <td><?= htmlspecialchars($r['nis']) ?></td>
+                                                <td><?= htmlspecialchars($r['nama_kelas'] ?? '-') ?></td>
+                                                <td><?= htmlspecialchars($r['nama']) ?></td>
+                                                <td><?= htmlspecialchars($r['jenis_kelamin']) ?></td>
+                                                <td><?= htmlspecialchars($r['tanggal_lahir']) ?></td>
+                                                <td><?= htmlspecialchars($r['alamat']) ?></td>
+                                                <td class="text-center">
+                                                    <a href="edit_siswa.php?id=<?= $r['id'] ?>" class="btn btn-warning btn-sm text-dark px-2 fw-semibold">Ubah</a>
+                                                    <a href="hapus_siswa.php?id=<?= $r['id'] ?>" class="btn btn-danger btn-sm text-white px-2 fw-semibold" onclick="return confirm('Yakin ingin menghapus data ini?')">Hapus</a>
+                                                </td>
+                                            </tr>
+                                            <?php
+                                        }
+                                    } else {
+                                        echo '<tr><td colspan="8" class="text-center text-muted py-4">Belum ada data siswa di dalam database.</td></tr>';
+                                    }
+                                } catch (Exception $e) {
+                                    echo '<tr><td colspan="8" class="text-center text-danger py-4">Error memuat data: ' . htmlspecialchars($e->getMessage()) . '</td></tr>';
                                 }
                             } else {
-                                ?>
-                                <tr>
-                                    <td colspan="8" class="text-center text-muted py-4">Belum ada data siswa di dalam database.</td>
-                                </tr>
-                                <?php 
+                                echo '<tr><td colspan="8" class="text-center text-danger py-4">Koneksi database belum terhubung dengan benar.</td></tr>';
                             }
                             ?>
                         </tbody>
