@@ -10,12 +10,11 @@ $db_connection = $conn ?? $koneksi ?? mysqli_connect("localhost", "root", "", "d
 
 // Proses Simpan Pelanggaran Siswa
 if (isset($_POST['submit'])) {
-    $tanggal         = trim($_POST['tanggal'] ?? '');
-    $siswa_id        = trim($_POST['siswa_id'] ?? '');
-    $kelas_id        = trim($_POST['kelas_id'] ?? '');
-    $pelanggaran_id  = trim($_POST['pelanggaran_id'] ?? '');
-    $status          = trim($_POST['status'] ?? 'Proses');
-    $keterangan      = trim($_POST['keterangan'] ?? '');
+    $tanggal        = trim($_POST['tanggal'] ?? '');
+    $siswa_id       = trim($_POST['siswa_id'] ?? '');
+    $kelas_id       = trim($_POST['kelas_id'] ?? '');
+    $pelanggaran_id = trim($_POST['pelanggaran_id'] ?? '');
+    $status         = trim($_POST['status'] ?? 'Proses');
     
     $guru_id         = $_SESSION['guru_id'] ?? 1; 
     $tahun_ajaran_id = 1;
@@ -56,8 +55,8 @@ if (isset($_POST['submit'])) {
     $nama_guru = mysqli_real_escape_string($db_connection, $d_guru['nama'] ?? 'Admin');
 
     $query_insert = "INSERT INTO t_pelanggaran_siswa 
-        (tahun_ajaran_id, siswa_id, nama_siswa, kelas_id, nama_kelas, pelanggaran_id, nama_pelanggaran, pelanggaran_kategori_id, guru_id, nama_guru, tanggal, keterangan, poin, tindakan, status, created_at, updated_at) 
-        VALUES ('$tahun_ajaran_id', '$siswa_id', '$nama_siswa', '$kelas_id', '$nama_kelas', '$pelanggaran_id', '$nama_pelanggaran', '$pelanggaran_kategori_id', '$guru_id', '$nama_guru', '$tanggal', '$keterangan', '$poin', '$tindakan', '$status', NOW(), NOW())";
+        (tahun_ajaran_id, siswa_id, nama_siswa, kelas_id, nama_kelas, pelanggaran_id, nama_pelanggaran, pelanggaran_kategori_id, guru_id, nama_guru, tanggal, poin, tindakan, status, created_at, updated_at) 
+        VALUES ('$tahun_ajaran_id', '$siswa_id', '$nama_siswa', '$kelas_id', '$nama_kelas', '$pelanggaran_id', '$nama_pelanggaran', '$pelanggaran_kategori_id', '$guru_id', '$nama_guru', '$tanggal', '$poin', '$tindakan', '$status', NOW(), NOW())";
     
     $insert = mysqli_query($db_connection, $query_insert);
     if ($insert) {
@@ -179,11 +178,6 @@ $query_pelanggaran = mysqli_query($db_connection, "SELECT * FROM t_pelanggaran O
                                 <option value="Selesai">Selesai</option>
                             </select>
                         </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="form-label fw-semibold">Keterangan (Opsional)</label>
-                        <textarea class="form-control" name="keterangan" rows="3" placeholder="Catatan atau kronologi singkat..."></textarea>
                     </div>
 
                     <div class="mt-4">

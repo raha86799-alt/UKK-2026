@@ -12,17 +12,19 @@ $section = 'admin';
 
 $db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
 
+// Proses Tambah Kategori Pelanggaran
 if (isset($_POST['submit'])) {
     $nama      = trim($_POST['nama'] ?? '');
-    $deksripsi = trim($_POST['deksripsi'] ?? '');
+    $deskripsi = trim($_POST['deskripsi'] ?? ''); // Diperbaiki dari deksripsi ke deskripsi
 
     if ($db_pdo) {
         try {
-            $stmt = $db_pdo->prepare("INSERT INTO t_pelanggaran_kategori (nama, deksripsi, created_at, updated_at) VALUES (?, ?, NOW(), NOW())");
-            $insert = $stmt->execute([$nama, $deksripsi]);
+            $stmt = $db_pdo->prepare("INSERT INTO t_pelanggaran_kategori (nama, deskripsi, created_at, updated_at) VALUES (?, ?, NOW(), NOW())");
+            $insert = $stmt->execute([$nama, $deskripsi]);
             
             if ($insert) {
                 echo "<script>alert('Data kategori pelanggaran berhasil ditambahkan!'); window.location='kategori_pelanggaran.php';</script>";
+                exit;
             } else {
                 echo "<script>alert('Gagal menyimpan data kategori pelanggaran.');</script>";
             }
@@ -81,12 +83,12 @@ if (isset($_POST['submit'])) {
                 <form action="" method="POST">
                     <div class="mb-3">
                         <label for="nama" class="form-label fw-bold">Nama Kategori</label>
-                        <input type="text" class="form-control" id="nama" name="nama" placeholder="Contoh: Kedisiplinan / Kebersihan" required>
+                        <input type="text" class="form-control" id="nama" name="nama" placeholder="Contoh: Pelanggaran Berat" required autocomplete="off">
                     </div>
 
                     <div class="mb-3">
-                        <label for="deksripsi" class="form-label fw-bold">Keterangan / Deskripsi</label>
-                        <textarea class="form-control" id="deksripsi" name="deksripsi" rows="3" placeholder="Masukkan keterangan atau deskripsi kategori..." required></textarea>
+                        <label for="deskripsi" class="form-label fw-bold">Keterangan / Deskripsi</label>
+                        <textarea class="form-control" id="deskripsi" name="deskripsi" rows="3" placeholder="Masukkan keterangan atau sanksi..." required></textarea>
                     </div>
 
                     <div class="mt-4">

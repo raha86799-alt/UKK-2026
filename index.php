@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($email === '' || $password === '') {
         $error = 'Email dan password wajib diisi.';
     } else {
-        $stmt = $pdo->prepare('SELECT id, name, email, password, role FROM t_user WHERE email = :email LIMIT 1');
+        $stmt = $pdo->prepare('SELECT id, name, email, password, role FROM t_users WHERE email = :email LIMIT 1');
         $stmt->execute(['email' => $email]);
         $u = $stmt->fetch();
         

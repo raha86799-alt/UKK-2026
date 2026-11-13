@@ -12,11 +12,15 @@ $section = 'admin';
 
 $db_connection = $conn ?? $koneksi ?? mysqli_connect("localhost", "root", "", "db_ukk_2026");
 
+// Ambil data kelas untuk pilihan dropdown
+$query_kelas = mysqli_query($db_connection, "SELECT * FROM t_kelas");
+
 // Proses Tambah Siswa
 if (isset($_POST['submit'])) {
     $nis_input     = trim($_POST['nis'] ?? '');
     $nisn          = trim($_POST['nisn'] ?? '');
     $nama          = trim($_POST['nama'] ?? '');
+    $kelas_id      = trim($_POST['kelas_id'] ?? '');
     $jenis_kelamin = trim($_POST['jenis_kelamin'] ?? '');
     $tanggal_lahir = trim($_POST['tanggal_lahir'] ?? '');
     $status_aktif  = trim($_POST['status_aktif'] ?? 1);
@@ -32,6 +36,7 @@ if (isset($_POST['submit'])) {
     $nis_esc           = mysqli_real_escape_string($db_connection, $nis_input);
     $nisn_esc          = mysqli_real_escape_string($db_connection, $nisn);
     $nama_esc          = mysqli_real_escape_string($db_connection, $nama);
+    $kelas_id_esc      = mysqli_real_escape_string($db_connection, $kelas_id);
     $jenis_kelamin_esc = mysqli_real_escape_string($db_connection, $jenis_kelamin);
     $tanggal_lahir_esc = mysqli_real_escape_string($db_connection, $tanggal_lahir);
     $status_aktif_esc  = mysqli_real_escape_string($db_connection, $status_aktif);
@@ -41,8 +46,8 @@ if (isset($_POST['submit'])) {
     $check_column = mysqli_query($db_connection, "SHOW COLUMNS FROM t_siswa LIKE 'nis'");
     $kolom_nis = (mysqli_num_rows($check_column) > 0) ? 'nis' : 'nip';
 
-    $query_insert = "INSERT INTO t_siswa ($kolom_nis, nisn, nama, jenis_kelamin, tanggal_lahir, alamat, status_aktif, created_at, updated_at) 
-                     VALUES ('$nis_esc', '$nisn_esc', '$nama_esc', '$jenis_kelamin_esc', '$tanggal_lahir_esc', '$alamat_esc', '$status_aktif_esc', NOW(), NOW())";
+    $query_insert = "INSERT INTO t_siswa ($kolom_nis, nisn, nama, kelas_id, jenis_kelamin, tanggal_lahir, alamat, status_aktif, created_at, updated_at) 
+                     VALUES ('$nis_esc', '$nisn_esc', '$nama_esc', '$kelas_id_esc', '$jenis_kelamin_esc', '$tanggal_lahir_esc', '$alamat_esc', '$status_aktif_esc', NOW(), NOW())";
     
     $insert = mysqli_query($db_connection, $query_insert);
     if ($insert) {
@@ -94,7 +99,6 @@ if (isset($_POST['submit'])) {
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="nis" class="form-label">NIS</label>
-                            <!-- Input dibatasi angka doang, max 10 karakter, sarta oninput pikeun nyegah leuwih ti 10 digit -->
                             <input type="text" class="form-control" id="nis" name="nis" placeholder="Contoh: 0000000001" 
                                    maxlength="10" pattern="[0-9]{10}" inputmode="numeric" 
                                    oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);" 
@@ -117,6 +121,18 @@ if (isset($_POST['submit'])) {
                             <input type="text" class="form-control" id="nama" name="nama" placeholder="" autocomplete="off" required>
                         </div>
                         <div class="col-md-6 mb-3">
+                            <label for="kelas_id" class="form-label">Kelas</label>
+                            <select class="form-select" id="kelas_id" name="kelas_id" required>
+                                <option value="">-- Pilih Kelas --</option>
+                                <?php while($k = mysqli_fetch_assoc($query_kelas)): ?>
+                                    <option value="<?= $k['id']; ?>"><?= $k['nama_kelas'] ?? $k['nama'] ?? 'Kelas ' . $k['id']; ?></option>
+                                <?php endwhile; ?>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
                             <label for="jenis_kelamin" class="form-label">Jenis Kelamin</label>
                             <select class="form-select" id="jenis_kelamin" name="jenis_kelamin" required>
                                 <option value="">-- Pilih Jenis Kelamin --</option>
@@ -124,13 +140,13 @@ if (isset($_POST['submit'])) {
                                 <option value="P">Perempuan</option>
                             </select>
                         </div>
-                    </div>
-
-                    <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="tanggal_lahir" class="form-label">Tanggal Lahir</label>
                             <input type="date" class="form-control" id="tanggal_lahir" name="tanggal_lahir" required>
                         </div>
+                    </div>
+
+                    <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="status_aktif" class="form-label">Status Aktif</label>
                             <select class="form-select" id="status_aktif" name="status_aktif" required>

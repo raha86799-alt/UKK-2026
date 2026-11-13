@@ -12,10 +12,10 @@ $section = 'admin';
 
 $db_connection = $conn ?? $koneksi ?? mysqli_connect("localhost", "root", "", "db_ukk_2026");
 
-// Cek apakah kolom di tabel t_guru menggunakan 'nis' atau 'nip'
+// Cek apakah kolom di tabel t_guru menggunakan 'nis' atau 'nip' di database
 $check_column = mysqli_query($db_connection, "SHOW COLUMNS FROM t_guru LIKE 'nis'");
 $kolom_nis = (mysqli_num_rows($check_column) > 0) ? 'nis' : 'nip';
-$label_nis = strtoupper($kolom_nis); // NIS atau NIP
+$label_nis = 'NIS'; // Label form tetap NIS
 
 // Proses Tambah Guru
 if (isset($_POST['submit'])) {
@@ -37,13 +37,13 @@ if (isset($_POST['submit'])) {
     $nama_esc  = mysqli_real_escape_string($db_connection, $nama);
     $email_esc = mysqli_real_escape_string($db_connection, $email);
 
-    // 1. Masukkan data ke t_user
-    $query_user = "INSERT INTO t_user (email, password, role) VALUES ('$email_esc', '$password_hash', 'guru')";
+    // 1. Masukkan data ke t_users
+    $query_user = "INSERT INTO t_users (email, password, role) VALUES ('$email_esc', '$password_hash', 'guru')";
     
     if (mysqli_query($db_connection, $query_user)) {
         $user_id = mysqli_insert_id($db_connection);
 
-        // 2. Simpan data ke tabel t_guru
+        // 2. Simpan data ke tabel t_guru menggunakan nama kolom yang sesuai di database (nis / nip)
         $query_insert = "INSERT INTO t_guru (user_id, $kolom_nis, nama, email, status_aktif, created_at, updated_at) 
                          VALUES ('$user_id', '$nis_esc', '$nama_esc', '$email_esc', '$status_aktif', NOW(), NOW())";
         
@@ -52,7 +52,7 @@ if (isset($_POST['submit'])) {
             echo "<script>alert('Data guru berhasil ditambahkan!'); window.location='kelola_guru.php';</script>";
             exit;
         } else {
-            mysqli_query($db_connection, "DELETE FROM t_user WHERE id = '$user_id'");
+            mysqli_query($db_connection, "DELETE FROM t_users WHERE id = '$user_id'");
             echo "<script>alert('Gagal menyimpan data guru: " . mysqli_error($db_connection) . "'); window.history.back();</script>";
         }
     } else {

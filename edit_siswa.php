@@ -23,11 +23,15 @@ if (!$id) {
 $check_nis = mysqli_query($db_connection, "SHOW COLUMNS FROM t_siswa LIKE 'nis'");
 $kolom_nis = (mysqli_num_rows($check_nis) > 0) ? 'nis' : 'nip';
 
+// Ambil data kelas untuk pilihan dropdown
+$query_kelas = mysqli_query($db_connection, "SELECT * FROM t_kelas");
+
 // Proses Update Data
 if (isset($_POST['submit'])) {
     $nis_input     = trim($_POST['nis'] ?? '');
     $nisn          = trim($_POST['nisn'] ?? '');
     $nama          = trim($_POST['nama'] ?? '');
+    $kelas_id      = trim($_POST['kelas_id'] ?? '');
     $jenis_kelamin = trim($_POST['jenis_kelamin'] ?? '');
     $tanggal_lahir = trim($_POST['tanggal_lahir'] ?? '');
     $alamat        = trim($_POST['alamat'] ?? '');
@@ -41,6 +45,7 @@ if (isset($_POST['submit'])) {
     $nis_esc           = mysqli_real_escape_string($db_connection, $nis_input);
     $nisn_esc          = mysqli_real_escape_string($db_connection, $nisn);
     $nama_esc          = mysqli_real_escape_string($db_connection, $nama);
+    $kelas_id_esc      = mysqli_real_escape_string($db_connection, $kelas_id);
     $jenis_kelamin_esc = mysqli_real_escape_string($db_connection, $jenis_kelamin);
     $tanggal_lahir_esc = mysqli_real_escape_string($db_connection, $tanggal_lahir);
     $alamat_esc        = mysqli_real_escape_string($db_connection, $alamat);
@@ -49,6 +54,7 @@ if (isset($_POST['submit'])) {
                         $kolom_nis = '$nis_esc', 
                         nisn = '$nisn_esc', 
                         nama = '$nama_esc', 
+                        kelas_id = '$kelas_id_esc',
                         jenis_kelamin = '$jenis_kelamin_esc', 
                         tanggal_lahir = '$tanggal_lahir_esc', 
                         alamat = '$alamat_esc', 
@@ -121,7 +127,6 @@ if (!$siswa) {
                 <form action="" method="POST">
                     <div class="mb-3">
                         <label for="nis" class="form-label fw-bold">NIS</label>
-                        <!-- Input dibatasi angka doang, maksimal 10 digit, otomatis mupus huruf -->
                         <input type="text" class="form-control" id="nis" name="nis" 
                                value="<?= htmlspecialchars($siswa['nis_val'] ?? '') ?>" 
                                maxlength="10" pattern="[0-9]{10}" inputmode="numeric" 
@@ -141,6 +146,17 @@ if (!$siswa) {
                     <div class="mb-3">
                         <label for="nama" class="form-label fw-bold">Nama Siswa</label>
                         <input type="text" class="form-control" id="nama" name="nama" value="<?= htmlspecialchars($siswa['nama'] ?? '') ?>" placeholder="Contoh: Alya Putri" autocomplete="off" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="kelas_id" class="form-label fw-bold">Kelas</label>
+                        <select class="form-select" id="kelas_id" name="kelas_id" required>
+                            <option value="">-- Pilih Kelas --</option>
+                            <?php while($k = mysqli_fetch_assoc($query_kelas)): ?>
+                                <option value="<?= $k['id'] ?>" <?= (($siswa['kelas_id'] ?? '') == $k['id']) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($k['nama_kelas'] ?? $k['nama'] ?? 'Kelas ' . $k['id']) ?>
+                                </option>
+                            <?php endwhile; ?>
+                        </select>
                     </div>
                     <div class="mb-3">
                         <label for="jenis_kelamin" class="form-label fw-bold">Jenis Kelamin</label>

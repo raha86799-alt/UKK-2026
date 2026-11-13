@@ -39,12 +39,12 @@ if (!$kategori) {
 // Proses update data
 if (isset($_POST['submit'])) {
     $nama      = trim($_POST['nama'] ?? '');
-    $deksripsi = trim($_POST['deksripsi'] ?? '');
+    $deskripsi = trim($_POST['deskripsi'] ?? ''); // Diperbaiki dari deksripsi ke deskripsi
 
     if ($db_pdo) {
         try {
-            $stmt = $db_pdo->prepare("UPDATE t_pelanggaran_kategori SET nama = ?, deksripsi = ?, updated_at = NOW() WHERE id = ?");
-            $update = $stmt->execute([$nama, $deksripsi, $id]);
+            $stmt = $db_pdo->prepare("UPDATE t_pelanggaran_kategori SET nama = ?, deskripsi = ?, updated_at = NOW() WHERE id = ?");
+            $update = $stmt->execute([$nama, $deskripsi, $id]);
             
             if ($update) {
                 echo "<script>alert('Data kategori pelanggaran berhasil diperbarui!'); window.location='kategori_pelanggaran.php';</script>";
@@ -110,8 +110,8 @@ if (isset($_POST['submit'])) {
                     </div>
 
                     <div class="mb-3">
-                        <label for="deksripsi" class="form-label fw-bold">Keterangan / Deskripsi</label>
-                        <textarea class="form-control" id="deksripsi" name="deksripsi" rows="3" required><?= htmlspecialchars($kategori['deksripsi'] ?? '') ?></textarea>
+                        <label for="deskripsi" class="form-label fw-bold">Keterangan / Deskripsi</label>
+                        <textarea class="form-control" id="deskripsi" name="deskripsi" rows="3" required><?= htmlspecialchars($kategori['deskripsi'] ?? '') ?></textarea>
                     </div>
 
                     <div class="mt-4">

@@ -13,7 +13,7 @@ $role = strtolower(trim($_SESSION['role'] ?? 'guru'));
 $labels = [
     'admin'      => ['title' => 'Dashboard Administrator', 'desc' => 'Kelola seluruh data sistem, pengguna, pelanggaran, laporan, dan export.'],
     'guru'       => ['title' => 'Dashboard Guru', 'desc' => 'Catat pelanggaran dan pantau perkembangan siswa.'],
-    'wali_kelas' => ['title' => 'Dashboard Wali Kelas', 'desc' => 'Pantau laporan, riwayat, dan rekap poin siswa di kelas.']
+    'wali_kelas' => ['title' => 'Dashboard Guru', 'desc' => 'Catat pelanggaran dan pantau perkembangan siswa.']
 ];
 
 $view = $labels[$role] ?? $labels['guru'];

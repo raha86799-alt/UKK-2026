@@ -71,6 +71,7 @@ $db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
                             <tr>
                                 <th width="5%">No</th>
                                 <th>NIS</th>
+                                <th>NISN</th>
                                 <th>Kelas</th>
                                 <th>Nama</th>
                                 <th>Jenis Kelamin</th>
@@ -83,11 +84,10 @@ $db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
                             <?php
                             if ($db_pdo) {
                                 try {
-                                    // Query dengan JOIN ke t_kelas_siswa dan t_kelas agar nama kelas muncul
+                                    // Query menggunakan k.nama sesuai struktur tabel t_kelas di database Anda
                                     $sql = "SELECT s.*, k.nama AS nama_kelas 
                                             FROM t_siswa s 
-                                            LEFT JOIN t_kelas_siswa ks ON s.id = ks.siswa_id AND ks.status_aktif = 1
-                                            LEFT JOIN t_kelas k ON ks.kelas_id = k.id
+                                            LEFT JOIN t_kelas k ON s.kelas_id = k.id
                                             ORDER BY s.id ASC";
                                             
                                     $rows = $db_pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
@@ -97,12 +97,13 @@ $db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
                                             ?>
                                             <tr>
                                                 <td><?= $i + 1 ?></td>
-                                                <td><?= htmlspecialchars($r['nis']) ?></td>
+                                                <td><?= htmlspecialchars($r['nis'] ?? '-') ?></td>
+                                                <td><?= htmlspecialchars($r['nisn'] ?? '-') ?></td>
                                                 <td><?= htmlspecialchars($r['nama_kelas'] ?? '-') ?></td>
-                                                <td><?= htmlspecialchars($r['nama']) ?></td>
-                                                <td><?= htmlspecialchars($r['jenis_kelamin']) ?></td>
-                                                <td><?= htmlspecialchars($r['tanggal_lahir']) ?></td>
-                                                <td><?= htmlspecialchars($r['alamat']) ?></td>
+                                                <td><?= htmlspecialchars($r['nama'] ?? '-') ?></td>
+                                                <td><?= htmlspecialchars($r['jenis_kelamin'] ?? '-') ?></td>
+                                                <td><?= htmlspecialchars($r['tanggal_lahir'] ?? '-') ?></td>
+                                                <td><?= htmlspecialchars($r['alamat'] ?? '-') ?></td>
                                                 <td class="text-center">
                                                     <a href="edit_siswa.php?id=<?= $r['id'] ?>" class="btn btn-warning btn-sm text-dark px-2 fw-semibold">Ubah</a>
                                                     <a href="hapus_siswa.php?id=<?= $r['id'] ?>" class="btn btn-danger btn-sm text-white px-2 fw-semibold" onclick="return confirm('Yakin ingin menghapus data ini?')">Hapus</a>
@@ -111,13 +112,13 @@ $db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
                                             <?php
                                         }
                                     } else {
-                                        echo '<tr><td colspan="8" class="text-center text-muted py-4">Belum ada data siswa di dalam database.</td></tr>';
+                                        echo '<tr><td colspan="9" class="text-center text-muted py-4">Belum ada data siswa di dalam database.</td></tr>';
                                     }
                                 } catch (Exception $e) {
-                                    echo '<tr><td colspan="8" class="text-center text-danger py-4">Error memuat data: ' . htmlspecialchars($e->getMessage()) . '</td></tr>';
+                                    echo '<tr><td colspan="9" class="text-center text-danger py-4">Error memuat data: ' . htmlspecialchars($e->getMessage()) . '</td></tr>';
                                 }
                             } else {
-                                echo '<tr><td colspan="8" class="text-center text-danger py-4">Koneksi database belum terhubung dengan benar.</td></tr>';
+                                echo '<tr><td colspan="9" class="text-center text-danger py-4">Koneksi database belum terhubung dengan benar.</td></tr>';
                             }
                             ?>
                         </tbody>

@@ -48,14 +48,12 @@ $db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
                                 <th>Nama Siswa</th>
                                 <th>Jenis Pelanggaran</th>
                                 <th>Tindakan / Sanksi</th>
-                                <th>Keterangan</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php
                             if ($db_pdo) {
                                 try {
-                                    // Sesuaikan nama tabel dengan database Anda (contoh: t_pelanggaran_siswa)
                                     $stmt = $db_pdo->query("SELECT * FROM t_pelanggaran_siswa ORDER BY id DESC");
                                     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -68,18 +66,17 @@ $db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
                                                 <td><?= htmlspecialchars($r['nama_siswa'] ?? '-') ?></td>
                                                 <td><?= htmlspecialchars($r['nama_pelanggaran'] ?? '-') ?></td>
                                                 <td><?= htmlspecialchars($r['tindakan'] ?? '-') ?></td>
-                                                <td><?= htmlspecialchars($r['keterangan'] ?? '-') ?></td>
                                             </tr>
                                             <?php
                                         }
                                     } else {
-                                        echo '<tr><td colspan="6" class="text-center text-muted py-4">Belum ada data riwayat pelanggaran.</td></tr>';
+                                        echo '<tr><td colspan="5" class="text-center text-muted py-4">Belum ada data riwayat pelanggaran.</td></tr>';
                                     }
                                 } catch (Exception $e) {
-                                    echo '<tr><td colspan="6" class="text-center text-danger py-4">Error: ' . htmlspecialchars($e->getMessage()) . '</td></tr>';
+                                    echo '<tr><td colspan="5" class="text-center text-danger py-4">Error: ' . htmlspecialchars($e->getMessage()) . '</td></tr>';
                                 }
                             } else {
-                                echo '<tr><td colspan="6" class="text-center text-danger py-4">Koneksi database tidak ditemukan.</td></tr>';
+                                echo '<tr><td colspan="5" class="text-center text-danger py-4">Koneksi database tidak ditemukan.</td></tr>';
                             }
                             ?>
                         </tbody>

@@ -7,7 +7,7 @@ if (function_exists('requireRole')) {
     requireRole(['admin']);
 }
 
-$title = 'Kategori Pelanggaran';
+$title = 'Kelola Jenis Pelanggaran';
 $section = 'admin';
 
 $db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
@@ -57,19 +57,20 @@ $db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
                         <h2><?= htmlspecialchars($title) ?></h2>
-                        <p class="text-muted mb-0">Kelola data kategori pelanggaran pada sistem.</p>
+                        <p class="text-muted mb-0">Kelola data jenis pelanggaran dan bobot poin pada sistem.</p>
                     </div>
-                    <a href="tambah_kategori_pelanggaran.php" class="btn btn-primary btn-sm fw-semibold">+ Tambah Kategori</a>
+                    <a href="tambah_jenis_pelanggaran.php" class="btn btn-primary btn-sm fw-semibold">+ Tambah Jenis Pelanggaran</a>
                 </div>
                 <hr>
 
                 <div class="table-responsive">
-                    <table id="tableKategori" class="table table-bordered table-striped align-middle w-100">
+                    <table id="tableJenisPelanggaran" class="table table-bordered table-striped align-middle w-100">
                         <thead class="table-light">
                             <tr>
                                 <th width="5%">No</th>
-                                <th>Nama Kategori</th>
-                                <th>Keterangan</th>
+                                <th>Nama Pelanggaran</th>
+                                <th>Kategori</th>
+                                <th width="10%">Poin</th>
                                 <th width="15%" class="text-center">Aksi</th>
                             </tr>
                         </thead>
@@ -77,33 +78,40 @@ $db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
                             <?php
                             if ($db_pdo) {
                                 try {
-                                    $stmt = $db_pdo->query("SELECT * FROM t_pelanggaran_kategori ORDER BY id DESC");
+                                    // Query dengan JOIN ke tabel t_pelanggaran_kategori untuk mengambil nama kategori
+                                    $query = "SELECT p.*, k.nama AS nama_kategori 
+                                              FROM t_pelanggaran p 
+                                              LEFT JOIN t_pelanggaran_kategori k ON p.kategori_id = k.id 
+                                              ORDER BY p.id DESC";
+                                    $stmt = $db_pdo->query($query);
                                     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                                     if (count($rows) > 0) {
                                         foreach ($rows as $i => $row) {
-                                            $namaKat = $row['nama'] ?? '-';
-                                            $ket     = $row['deksripsi'] ?? '-';
+                                            $namaPelanggaran = $row['nama'] ?? '-';
+                                            $namaKategori    = $row['nama_kategori'] ?? '-';
+                                            $poin            = $row['poin'] ?? 0;
                                             ?>
                                             <tr>
                                                 <td><?= $i + 1 ?></td>
-                                                <td><?= htmlspecialchars($namaKat) ?></td>
-                                                <td><?= htmlspecialchars($ket) ?></td>
+                                                <td><?= htmlspecialchars($namaPelanggaran) ?></td>
+                                                <td><?= htmlspecialchars($namaKategori) ?></td>
+                                                <td><span class="badge bg-danger"><?= $poin ?> Poin</span></td>
                                                 <td class="text-center">
-                                                    <a href="edit_kategori_pelanggaran.php?id=<?= $row['id'] ?>" class="btn btn-warning btn-sm text-dark px-2 fw-semibold">Ubah</a>
-                                                    <a href="hapus_kategori_pelanggaran.php?id=<?= $row['id'] ?>" class="btn btn-danger btn-sm text-white px-2 fw-semibold" onclick="return confirm('Yakin ingin menghapus data ini?')">Hapus</a>
+                                                    <a href="edit_jenis_pelanggaran.php?id=<?= $row['id'] ?>" class="btn btn-warning btn-sm text-dark px-2 fw-semibold">Ubah</a>
+                                                    <a href="hapus_jenis_pelanggaran.php?id=<?= $row['id'] ?>" class="btn btn-danger btn-sm text-white px-2 fw-semibold" onclick="return confirm('Yakin ingin menghapus data ini?')">Hapus</a>
                                                 </td>
                                             </tr>
                                             <?php
                                         }
                                     } else {
-                                        echo '<tr><td colspan="4" class="text-center text-muted py-4">Belum ada data kategori pelanggaran.</td></tr>';
+                                        echo '<tr><td colspan="5" class="text-center text-muted py-4">Belum ada data jenis pelanggaran.</td></tr>';
                                     }
                                 } catch (Exception $e) {
-                                    echo '<tr><td colspan="4" class="text-center text-danger py-4">Error memuat data: ' . htmlspecialchars($e->getMessage()) . '</td></tr>';
+                                    echo '<tr><td colspan="5" class="text-center text-danger py-4">Error memuat data: ' . htmlspecialchars($e->getMessage()) . '</td></tr>';
                                 }
                             } else {
-                                echo '<tr><td colspan="4" class="text-center text-danger py-4">Koneksi database belum terhubung dengan benar.</td></tr>';
+                                echo '<tr><td colspan="5" class="text-center text-danger py-4">Koneksi database belum terhubung dengan benar.</td></tr>';
                             }
                             ?>
                         </tbody>
@@ -126,7 +134,7 @@ $db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
 <!-- Inisialisasi DataTable -->
 <script>
     $(document).ready(function() {
-        $('#tableKategori').DataTable({
+        $('#tableJenisPelanggaran').DataTable({
             "language": {
                 "url": "//cdn.datatables.net/plug-ins/1.13.8/i18n/id.json"
             }

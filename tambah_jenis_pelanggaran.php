@@ -11,24 +11,37 @@ $title = 'Tambah Jenis Pelanggaran';
 $section = 'admin';
 $db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
 
+// Ambil daftar kategori untuk pilihan dropdown
+$kategori_list = [];
+if ($db_pdo) {
+    try {
+        $stmt_kat = $db_pdo->query("SELECT id, nama FROM t_pelanggaran_kategori ORDER BY nama ASC");
+        $kategori_list = $stmt_kat->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        // Handle error jika diperlukan
+    }
+}
+
 if (isset($_POST['submit'])) {
     $nama_pelanggaran = trim($_POST['nama_pelanggaran'] ?? '');
-    $kategori         = trim($_POST['kategori'] ?? ''); // Bisa diubah jadi ID kategori jika form menggunakan select dropdown
+    $kategori_id      = (int)($_POST['kategori_id'] ?? 0); 
     $poin             = (int)($_POST['poin'] ?? 0);
 
-    if ($db_pdo && !empty($nama_pelanggaran)) {
+    if ($db_pdo && !empty($nama_pelanggaran) && $kategori_id > 0) {
         try {
-            // Menyesuaikan dengan kolom asli di database: nama, poin, pelanggaran_kategori_id, kode, dll
-            $stmt = $db_pdo->prepare("INSERT INTO t_pelanggaran (nama, poin, pelanggaran_kategori_id, kode, status_aktif, created_at, updated_at) VALUES (?, ?, 1, 'P999', 1, NOW(), NOW())");
-            $insert = $stmt->execute([$nama_pelanggaran, $poin]);
+            // Menyimpan kategori_id yang dipilih dari form ke kolom pelanggaran_kategori_id
+            $stmt = $db_pdo->prepare("INSERT INTO t_pelanggaran (nama, poin, pelanggaran_kategori_id, kode, status_aktif, created_at, updated_at) VALUES (?, ?, ?, 'P999', 1, NOW(), NOW())");
+            $insert = $stmt->execute([$nama_pelanggaran, $poin, $kategori_id]);
 
             if ($insert) {
-                echo "<script>alert('Pelanggaran berhasil ditambahkan!'); window.location='jenis_pelanggaran.php';</script>";
+                echo "<script>alert('Jenis pelanggaran berhasil ditambahkan!'); window.location='jenis_pelanggaran.php';</script>";
                 exit;
             }
         } catch (Exception $e) {
             echo "<script>alert('Gagal menyimpan data: " . addslashes($e->getMessage()) . "');</script>";
         }
+    } else {
+        echo "<script>alert('Mohon pilih kategori pelanggaran dengan benar!');</script>";
     }
 }
 ?>
@@ -62,12 +75,17 @@ if (isset($_POST['submit'])) {
                 <form action="" method="POST">
                     <div class="mb-3">
                         <label for="nama_pelanggaran" class="form-label fw-bold">Nama Pelanggaran</label>
-                        <input type="text" class="form-control" id="nama_pelanggaran" name="nama_pelanggaran" placeholder="Contoh: Terlambat hadir" required>
+                        <input type="text" class="form-control" id="nama_pelanggaran" name="nama_pelanggaran" placeholder="Contoh: Terlambat hadir" required autocomplete="off">
                     </div>
 
                     <div class="mb-3">
-                        <label for="kategori" class="form-label fw-bold">Kategori</label>
-                        <input type="text" class="form-control" id="kategori" name="kategori" placeholder="Contoh: Kedisiplinan" required>
+                        <label for="kategori_id" class="form-label fw-bold">Kategori</label>
+                        <select class="form-select" id="kategori_id" name="kategori_id" required>
+                            <option value="">-- Pilih Kategori Pelanggaran --</option>
+                            <?php foreach ($kategori_list as $kat): ?>
+                                <option value="<?= $kat['id'] ?>"><?= htmlspecialchars($kat['nama']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
 
                     <div class="mb-3">
