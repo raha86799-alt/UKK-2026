@@ -30,7 +30,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($login_valid) {
             session_regenerate_id(true);
-            $_SESSION['user_id'] = $u['id'];
+            $_SESSION['user_id'] = (int)$u['id'];
+            $_SESSION['id'] = (int)$u['id'];
+            $_SESSION['id_user'] = (int)$u['id'];
+            $_SESSION['login'] = true;
             $_SESSION['name'] = $u['name'];
             $_SESSION['role'] = strtolower($u['role']);
             header('Location: dashboard.php'); 

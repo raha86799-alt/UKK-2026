@@ -22,14 +22,19 @@ if (isset($_POST['submit'])) {
     $nis_input    = trim($_POST['nis'] ?? '');
     $nama         = trim($_POST['nama'] ?? '');
     $email        = trim($_POST['email'] ?? '');
-    $password     = $_POST['password'] ?? '123456';
+    $password     = $_POST['password'] ?? '';
+
+    if (strlen($password) < 6) {
+        echo "<script>alert('Password wajib diisi minimal 6 karakter!'); window.history.back();</script>";
+        exit;
+    }
     $status_aktif = trim($_POST['status_aktif'] ?? 1);
     
     $password_hash = password_hash($password, PASSWORD_DEFAULT);
 
     // Validasi ketat: Kudu angka wungkul sarta panjangna kudu pas 10 digit
-    if (!preg_match('/^[0-9]{10}$/', $nis_input)) {
-        echo "<script>alert('Gagal: {$label_nis} harus berupa angka dan panjangnya harus tepat 10 digit!'); window.history.back();</script>";
+    if (!preg_match('/^[0-9]{10,17}$/', $nis_input)) {
+        echo "<script>alert('Gagal: {$label_nis} harus berupa angka minimal 10 dan maksimal 17 digit!'); window.history.back();</script>";
         exit;
     }
 
@@ -126,10 +131,10 @@ if (isset($_POST['submit'])) {
                             <td class="input-col">
                                 <!-- Input dibatasi angka doang, maksimal 10 digit, otomatis mupus huruf -->
                                 <input type="text" class="form-control" name="nis" placeholder="" 
-                                       maxlength="10" pattern="[0-9]{10}" inputmode="numeric" 
-                                       oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);" 
+                                       minlength="10" maxlength="17" pattern="[0-9]{10,17}" inputmode="numeric" 
+                                       oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 17);" 
                                        autocomplete="off" required>
-                                <div class="form-text">Wajib 10 digit angka.</div>
+                                <div class="form-text">Hanya angka, minimal 10 dan maksimal 17 digit.</div>
                             </td>
                         </tr>
                         <tr>
@@ -150,8 +155,11 @@ if (isset($_POST['submit'])) {
                             <td class="label-col">Password</td>
                             <td class="colon-col">:</td>
                             <td class="input-col">
-                                <input type="password" class="form-control" name="password" placeholder="Minimal 6 karakter." autocomplete="off">
-                                <div class="form-text text-muted">Kosongkan atau gunakan default (123456) jika tidak diisi.</div>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="password_guru" name="password" placeholder="Masukkan password minimal 6 karakter" minlength="6" autocomplete="new-password" required>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordGuru()">Lihat</button>
+                                </div>
+                                <div class="form-text text-muted">Password wajib diisi minimal 6 karakter dan digunakan guru untuk login.</div>
                             </td>
                         </tr>
                         <tr>
@@ -177,6 +185,14 @@ if (isset($_POST['submit'])) {
     </div>
 </div>
 
+<script>
+function togglePasswordGuru() {
+    const input = document.getElementById("password_guru");
+    const button = input.nextElementSibling;
+    if (input.type === "password") { input.type = "text"; button.textContent = "Sembunyikan"; }
+    else { input.type = "password"; button.textContent = "Lihat"; }
+}
+</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

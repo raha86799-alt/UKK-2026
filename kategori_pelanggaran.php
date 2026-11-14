@@ -78,11 +78,11 @@ $db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
                             <?php
                             if ($db_pdo) {
                                 try {
-                                    // Query dengan JOIN ke tabel t_pelanggaran_kategori untuk mengambil nama kategori
+                                    // Query yang diperbaiki: menggunakan p.pelanggaran_kategori_id
                                     $query = "SELECT p.*, k.nama AS nama_kategori 
-                                              FROM t_pelanggaran p 
-                                              LEFT JOIN t_pelanggaran_kategori k ON p.kategori_id = k.id 
-                                              ORDER BY p.id DESC";
+                                             FROM t_pelanggaran p 
+                                             LEFT JOIN t_pelanggaran_kategori k ON p.pelanggaran_kategori_id = k.id 
+                                             ORDER BY p.id DESC";
                                     $stmt = $db_pdo->query($query);
                                     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

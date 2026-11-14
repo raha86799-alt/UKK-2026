@@ -53,6 +53,9 @@ $role = strtolower(trim($_SESSION['role'] ?? 'guru'));
                     </a>
                 </li>
 
+                <!-- MENU CATAT PELANGGARAN DAN TINDAKAN -->
+                <li class="nav-item mb-2"><a href="catat_pelanggaran.php" class="nav-link <?= ($current_page == 'catat_pelanggaran.php') ? 'active' : 'text-white' ?>">Catat Pelanggaran</a></li>
+                <li class="nav-item mb-2"><a href="tindakan.php" class="nav-link <?= ($current_page == 'tindakan.php') ? 'active' : 'text-white' ?>">Tindakan</a></li>
                 <!-- MENU LAPORAN -->
                 <li class="nav-item mb-2">
                     <a href="laporan.php" class="nav-link <?= (in_array($current_page, ['laporan.php', 'cetak_export.php'])) ? 'active' : 'text-white' ?>">
@@ -90,7 +93,7 @@ $role = strtolower(trim($_SESSION['role'] ?? 'guru'));
 
                 <!-- MENU KELOLA JENIS PELANGGARAN (DI BAWAH RIWAYAT) -->
                 <li class="nav-item mb-2">
-                    <a href="jenis_pelanggaran.php" class="nav-link <?= (in_array($current_page, ['jenis_pelanggaran.php', 'tambah_jenis_pelanggaran.php', 'edit_jenis_pelanggaran.php'])) ? 'active' : 'text-white' ?>">
+                    <a href="jenis_pelanggaran.php" class="nav-link <?= (in_array($current_page, ['jenis_pelanggaran.php', 'kelola_jenis_pelanggaran.php', 'tambah_jenis_pelanggaran.php', 'edit_jenis_pelanggaran.php', 'edit_pelanggaran.php'])) ? 'active' : 'text-white' ?>">
                         Jenis Pelanggaran
                     </a>
                 </li>

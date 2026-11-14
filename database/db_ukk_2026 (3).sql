@@ -29,7 +29,7 @@ SET time_zone = "+00:00";
 
 CREATE TABLE `t_guru` (
   `id` int(11) NOT NULL,
-  `nip` varchar(30) NOT NULL,
+  `nip` varchar(17) NOT NULL,
   `nama` varchar(150) NOT NULL,
   `email` varchar(150) NOT NULL,
   `status_aktif` tinyint(1) NOT NULL,
@@ -463,8 +463,8 @@ INSERT INTO `t_pelanggaran_siswa` (`id`, `tahun_ajaran_id`, `siswa_id`, `nama_si
 
 CREATE TABLE `t_siswa` (
   `id` int(11) NOT NULL,
-  `nis` varchar(30) NOT NULL,
-  `nisn` varchar(20) NOT NULL,
+  `nis` varchar(10) NOT NULL,
+  `nisn` varchar(15) NOT NULL,
   `nama` varchar(150) NOT NULL,
   `kelas_id` int(11) DEFAULT NULL,
   `jenis_kelamin` char(1) NOT NULL,

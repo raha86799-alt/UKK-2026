@@ -84,10 +84,17 @@ $db_pdo = $pdo ?? ($conn instanceof PDO ? $conn : null);
                             <?php
                             if ($db_pdo) {
                                 try {
-                                    // Query menggunakan k.nama sesuai struktur tabel t_kelas di database Anda
-                                    $sql = "SELECT s.*, k.nama AS nama_kelas 
-                                            FROM t_siswa s 
-                                            LEFT JOIN t_kelas k ON s.kelas_id = k.id
+                                    // Kelas siswa disimpan pada tabel relasi t_kelas_siswa,
+                                    // bukan langsung pada t_siswa. Ambil penempatan aktif terbaru.
+                                    $sql = "SELECT s.*,
+                                                (SELECT k.nama
+                                                 FROM t_kelas_siswa ks
+                                                 INNER JOIN t_kelas k ON k.id = ks.kelas_id
+                                                 WHERE ks.siswa_id = s.id
+                                                   AND ks.status_aktif = 1
+                                                 ORDER BY ks.id DESC
+                                                 LIMIT 1) AS nama_kelas
+                                            FROM t_siswa s
                                             ORDER BY s.id ASC";
                                             
                                     $rows = $db_pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
